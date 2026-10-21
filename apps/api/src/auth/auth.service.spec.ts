@@ -1,4 +1,4 @@
-import { UnauthorizedException } from '@nestjs/common';
+import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import type { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import type { AuditService } from '../audit/audit.service';
@@ -133,14 +133,21 @@ describe('AuthService.verifyStepUp', () => {
     });
   });
 
-  it('un código inválido cuenta como intento fallido', async () => {
+  it('un código inválido en una operación es 403 y cuenta como intento fallido', async () => {
     const { service, prisma } = setup(baseUser, { otpOk: false });
     await expect(
       service.verifyStepUp(baseUser.id, '000000', meta, 'TRANSFER'),
-    ).rejects.toThrow(UnauthorizedException);
+    ).rejects.toThrow(ForbiddenException);
     expect(prisma.user.update).toHaveBeenCalledWith({
       where: { id: baseUser.id },
       data: { failedAttempts: { increment: 1 } },
     });
+  });
+
+  it('un código inválido en el login es 401', async () => {
+    const { service } = setup(baseUser, { otpOk: false });
+    await expect(
+      service.verifyStepUp(baseUser.id, '000000', meta, 'LOGIN_OTP'),
+    ).rejects.toThrow(UnauthorizedException);
   });
 });

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { otpCodeSchema } from './auth.js';
-import { amountInputSchema, type Currency } from './money.js';
+import { amountInputSchema, currencySchema } from './money.js';
 
 /**
  * Lista blanca de caracteres para la descripción: evita contenido que pueda
@@ -28,11 +28,12 @@ export type CreateTransferRequest = z.infer<typeof createTransferRequestSchema>;
 
 export const IDEMPOTENCY_HEADER = 'idempotency-key';
 
-export interface TransferResponse {
-  id: string;
-  status: 'COMPLETED';
-  amountCents: number;
-  currency: Currency;
-  toAccountNumberMasked: string;
-  createdAt: string;
-}
+export const transferResponseSchema = z.object({
+  id: z.string(),
+  status: z.literal('COMPLETED'),
+  amountCents: z.number().int(),
+  currency: currencySchema,
+  toAccountNumberMasked: z.string(),
+  createdAt: z.string(),
+});
+export type TransferResponse = z.infer<typeof transferResponseSchema>;

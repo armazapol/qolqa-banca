@@ -11,6 +11,9 @@ export default [
       '**/coverage',
       '**/test-output',
       '**/.nx',
+      '**/build',
+      '**/.react-router',
+      '**/vite.config.*.timestamp*',
     ],
   },
   {

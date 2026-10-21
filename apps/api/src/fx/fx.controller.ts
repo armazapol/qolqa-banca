@@ -5,6 +5,8 @@ import type {
   FxHistoryPoint,
   OfficialFxRate,
 } from '@qolqa/contracts';
+import { ZodResponse } from 'nestjs-zod';
+import { BankFxQuoteDto, FxHistoryPointDto, OfficialFxRateDto } from './fx.dto';
 import { FxService } from './fx.service';
 
 /**
@@ -17,6 +19,7 @@ export class FxController {
   constructor(private readonly fx: FxService) {}
 
   @Get('official')
+  @ZodResponse({ status: 200, type: OfficialFxRateDto })
   @Header(
     'Cache-Control',
     'public, max-age=60, s-maxage=300, stale-while-revalidate=600',
@@ -26,6 +29,7 @@ export class FxController {
   }
 
   @Get('history')
+  @ZodResponse({ status: 200, type: [FxHistoryPointDto] })
   @Header(
     'Cache-Control',
     'public, max-age=300, s-maxage=3600, stale-while-revalidate=3600',
@@ -35,6 +39,7 @@ export class FxController {
   }
 
   @Get('quote')
+  @ZodResponse({ status: 200, type: BankFxQuoteDto })
   @Header('Cache-Control', 'no-store')
   quote(): BankFxQuote {
     return this.fx.currentQuote();

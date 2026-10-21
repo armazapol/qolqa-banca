@@ -8,6 +8,12 @@
     },
     {
       "path": "./packages/contracts"
+    },
+    {
+      "path": "./apps/shell-react-e2e"
+    },
+    {
+      "path": "./apps/shell-react"
     }
   ],
   "compilerOptions": {}

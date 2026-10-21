@@ -54,3 +54,5 @@ Thumbs.db
 !.env.example
 
 test-output
+
+vite.config.*.timestamp*

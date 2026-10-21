@@ -12,10 +12,13 @@ export const loginRequestSchema = z.object({
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
 
 /** Primer paso correcto: el usuario debe confirmar con su código TOTP. */
-export interface LoginChallengeResponse {
-  challengeToken: string;
-  expiresIn: number;
-}
+export const loginChallengeResponseSchema = z.object({
+  challengeToken: z.string(),
+  expiresIn: z.number().int(),
+});
+export type LoginChallengeResponse = z.infer<
+  typeof loginChallengeResponseSchema
+>;
 
 export const verifyOtpRequestSchema = z.object({
   challengeToken: z.string().min(1).max(2048),
@@ -23,26 +26,28 @@ export const verifyOtpRequestSchema = z.object({
 });
 export type VerifyOtpRequest = z.infer<typeof verifyOtpRequestSchema>;
 
-export interface SessionUser {
-  id: string;
-  fullName: string;
-  email: string;
-}
+export const sessionUserSchema = z.object({
+  id: z.string(),
+  fullName: z.string(),
+  email: z.string(),
+});
+export type SessionUser = z.infer<typeof sessionUserSchema>;
 
 /** El access token viaja en el cuerpo y se guarda solo en memoria (ADR-0009). */
-export interface AccessTokenResponse {
-  accessToken: string;
-  expiresIn: number;
-  user: SessionUser;
-}
+export const accessTokenResponseSchema = z.object({
+  accessToken: z.string(),
+  expiresIn: z.number().int(),
+  user: sessionUserSchema,
+});
+export type AccessTokenResponse = z.infer<typeof accessTokenResponseSchema>;
 
-export interface CsrfTokenResponse {
-  csrfToken: string;
-}
+export const csrfTokenResponseSchema = z.object({ csrfToken: z.string() });
+export type CsrfTokenResponse = z.infer<typeof csrfTokenResponseSchema>;
 
-export interface WsTicketResponse {
-  ticket: string;
-  expiresIn: number;
-}
+export const wsTicketResponseSchema = z.object({
+  ticket: z.string(),
+  expiresIn: z.number().int(),
+});
+export type WsTicketResponse = z.infer<typeof wsTicketResponseSchema>;
 
 export const CSRF_HEADER = 'x-csrf-token';

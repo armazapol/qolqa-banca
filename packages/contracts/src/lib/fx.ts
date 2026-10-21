@@ -1,25 +1,30 @@
+import { z } from 'zod';
+
 /** Tipo de cambio oficial publicado por el BCRP (S/ por US$). */
-export interface OfficialFxRate {
-  buy: number;
-  sell: number;
+export const officialFxRateSchema = z.object({
+  buy: z.number(),
+  sell: z.number(),
   /** Fecha del dato en el BCRP, formato YYYY-MM-DD. */
-  date: string;
-  source: 'BCRP';
-}
+  date: z.string(),
+  source: z.literal('BCRP'),
+});
+export type OfficialFxRate = z.infer<typeof officialFxRateSchema>;
 
 /**
  * Cotización referencial del banco, simulada alrededor de la tasa oficial
  * (ADR-0017). Siempre se muestra marcada como simulada.
  */
-export interface BankFxQuote {
-  buy: number;
-  sell: number;
-  official: OfficialFxRate;
-  simulated: true;
-  updatedAt: string;
-}
+export const bankFxQuoteSchema = z.object({
+  buy: z.number(),
+  sell: z.number(),
+  official: officialFxRateSchema,
+  simulated: z.literal(true),
+  updatedAt: z.string(),
+});
+export type BankFxQuote = z.infer<typeof bankFxQuoteSchema>;
 
-export interface FxHistoryPoint {
-  date: string;
-  sell: number;
-}
+export const fxHistoryPointSchema = z.object({
+  date: z.string(),
+  sell: z.number(),
+});
+export type FxHistoryPoint = z.infer<typeof fxHistoryPointSchema>;

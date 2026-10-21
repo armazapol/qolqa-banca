@@ -1,0 +1,122 @@
+{
+  "name": "@qolqa/shell-react",
+  "private": true,
+  "type": "module",
+  "scripts": {},
+  "sideEffects": false,
+  "nx": {
+    "name": "shell-react",
+    "tags": [
+      "type:app",
+      "scope:shell"
+    ],
+    "targets": {
+      "codegen": {
+        "cache": true,
+        "command": "orval --config orval.config.ts && graphql-codegen --config codegen.ts",
+        "options": {
+          "cwd": "apps/shell-react"
+        },
+        "inputs": [
+          "{projectRoot}/orval.config.ts",
+          "{projectRoot}/codegen.ts",
+          "{workspaceRoot}/apps/api/openapi.json",
+          "{workspaceRoot}/apps/api/schema.graphql",
+          "{projectRoot}/app/**/*.{ts,tsx}",
+          "!{projectRoot}/app/generated/**/*"
+        ],
+        "outputs": [
+          "{projectRoot}/app/generated"
+        ]
+      },
+      "typegen": {
+        "cache": true,
+        "command": "react-router typegen",
+        "options": {
+          "cwd": "apps/shell-react"
+        },
+        "inputs": [
+          "{projectRoot}/app/routes.ts",
+          "{projectRoot}/app/**/*.tsx",
+          "{projectRoot}/react-router.config.ts"
+        ],
+        "outputs": [
+          "{projectRoot}/.react-router"
+        ]
+      },
+      "typecheck": {
+        "dependsOn": [
+          "^typecheck",
+          "codegen",
+          "typegen"
+        ]
+      },
+      "build": {
+        "dependsOn": [
+          "^build",
+          "codegen"
+        ]
+      },
+      "test": {
+        "dependsOn": [
+          "^build",
+          "codegen"
+        ]
+      },
+      "lint": {
+        "dependsOn": [
+          "codegen",
+          "typegen"
+        ]
+      },
+      "dev": {
+        "dependsOn": [
+          "codegen"
+        ]
+      }
+    }
+  },
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@fontsource-variable/inter": "^5.3.0",
+    "@hookform/resolvers": "^6.0.0",
+    "@mui/icons-material": "^9.5.0",
+    "@mui/material": "^9.5.0",
+    "@mui/x-charts": "^9.16.0",
+    "@qolqa/contracts": "workspace:*",
+    "@react-router/node": "^7.14.2",
+    "@react-router/serve": "^7.14.2",
+    "@reduxjs/toolkit": "^2.13.0",
+    "@tanstack/react-query": "^5.104.5",
+    "@tanstack/react-query-devtools": "^5.104.5",
+    "dompurify": "^3.4.17",
+    "isbot": "^4.4.0",
+    "motion": "^14.4.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.90.0",
+    "react-redux": "^9.3.0",
+    "react-router": "^7.14.2",
+    "socket.io-client": "^4.8.4",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@graphql-codegen/cli": "^7.4.6",
+    "@graphql-codegen/client-preset": "^6.2.3",
+    "@graphql-typed-document-node/core": "^3.2.0",
+    "@react-router/dev": "^7.14.2",
+    "@tailwindcss/vite": "^4.3.3",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/user-event": "^14.6.8",
+    "@types/jest-axe": "^3.5.9",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "jest-axe": "^11.0.0",
+    "jest-fixed-jsdom": "^0.0.11",
+    "msw": "^2.15.0",
+    "orval": "^8.43.0",
+    "tailwindcss": "^4.3.3"
+  }
+}

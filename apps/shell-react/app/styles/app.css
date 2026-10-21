@@ -1,0 +1,38 @@
+/*
+ * Orden de capas (ADR-0007): las utilidades de Tailwind ganan a los estilos
+ * de MUI (capa "mui") de forma predecible, sin !important.
+ */
+@layer theme, base, mui, components, utilities;
+@import 'tailwindcss';
+
+/* El modo oscuro lo controla MUI con la clase .dark en <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans:
+    'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --color-brand: #0b4f5c;
+  --color-brand-light: #7cc7d3;
+  --color-gold: #e0a526;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply font-sans antialiased;
+  }
+
+  /* Respeta la preferencia de movimiento reducido (WCAG 2.3.3). */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

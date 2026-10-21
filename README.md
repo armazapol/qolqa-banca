@@ -29,12 +29,16 @@ cp apps/api/.env.example apps/api/.env # rellena los secretos (base64 de 32 byte
 pnpm nx run api:db-migrate             # aplica las migraciones
 pnpm nx run api:db-seed                # crea los usuarios de demo
 pnpm nx serve api                      # BFF en http://localhost:3000/api
+pnpm nx dev shell-react                # banca web en http://localhost:5173
 ```
 
 Para generar un secreto: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`
 
+Si cambias un endpoint REST o el esquema GraphQL del BFF, regenera el contrato con `pnpm nx run api:openapi`; el front vuelve a generar sus clientes tipados automáticamente.
+
 | Recurso                       | URL                                   |
 | ----------------------------- | ------------------------------------- |
+| Banca web                     | http://localhost:5173                 |
 | Swagger (REST)                | http://localhost:3000/api/docs        |
 | GraphQL (Apollo Sandbox)      | http://localhost:3000/api/graphql     |
 | Health check                  | http://localhost:3000/api/health      |

@@ -1,4 +1,9 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  HttpException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import type {
@@ -130,6 +135,10 @@ export class AuthService {
   /**
    * Verifica un código TOTP del usuario: se usa en el login y para confirmar
    * operaciones (transferencias). Registra el paso usado para impedir replays.
+   *
+   * En una operación el usuario ya está autenticado: un código inválido es 403
+   * (no autorizado para ESTA operación), no 401. Así el cliente no confunde el
+   * fallo con un token expirado ni reenvía el mismo código tras renovar sesión.
    */
   async verifyStepUp(
     userId: string,
@@ -137,9 +146,13 @@ export class AuthService {
     meta: RequestMeta,
     action: 'LOGIN_OTP' | 'TRANSFER',
   ): Promise<User> {
+    const reject = (message: string): HttpException =>
+      action === 'TRANSFER'
+        ? new ForbiddenException(message)
+        : new UnauthorizedException(message);
+
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    if (!user || this.isLocked(user))
-      throw new UnauthorizedException(INVALID_CREDENTIALS);
+    if (!user || this.isLocked(user)) throw reject(INVALID_CREDENTIALS);
 
     const check = await this.totp.check(
       user.totpSecretEnc,
@@ -155,9 +168,7 @@ export class AuthService {
         meta,
         metadata: { reason: 'OTP_INVALID' },
       });
-      throw new UnauthorizedException(
-        'Código de verificación inválido o ya utilizado',
-      );
+      throw reject('Código de verificación inválido o ya utilizado');
     }
 
     const updated = await this.prisma.user.update({

@@ -9,6 +9,7 @@ import {
 import { ApiBearerAuth, ApiHeader, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { IDEMPOTENCY_HEADER, type TransferResponse } from '@qolqa/contracts';
+import { ZodResponse } from 'nestjs-zod';
 import { z } from 'zod';
 import {
   AccessTokenGuard,
@@ -16,7 +17,7 @@ import {
   CurrentUser,
 } from '../auth/access-token.guard';
 import { ReqMeta, type RequestMeta } from '../common/request-context';
-import { CreateTransferDto } from './transfers.dto';
+import { CreateTransferDto, TransferResponseDto } from './transfers.dto';
 import { TransfersService } from './transfers.service';
 
 const idempotencyKeySchema = z.uuid();
@@ -29,6 +30,7 @@ export class TransfersController {
   constructor(private readonly transfers: TransfersService) {}
 
   @Post()
+  @ZodResponse({ status: 201, type: TransferResponseDto })
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @ApiHeader({
     name: IDEMPOTENCY_HEADER,

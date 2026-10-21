@@ -1,0 +1,513 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/health": {
+      "get": {
+        "operationId": "healthCheck",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["health"]
+      }
+    },
+    "/api/auth/csrf": {
+      "get": {
+        "operationId": "authIssueCsrf",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CsrfTokenResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["auth"]
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "operationId": "authLogin",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginChallengeResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["auth"]
+      }
+    },
+    "/api/auth/otp": {
+      "post": {
+        "operationId": "authVerifyOtp",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyOtpDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessTokenResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["auth"]
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "operationId": "authRefresh",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessTokenResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["auth"]
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "operationId": "authLogout",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Sesión cerrada"
+          }
+        },
+        "tags": ["auth"]
+      }
+    },
+    "/api/auth/ws-ticket": {
+      "post": {
+        "operationId": "authIssueWsTicket",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WsTicketResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["auth"]
+      }
+    },
+    "/api/transfers": {
+      "post": {
+        "operationId": "transfersCreate",
+        "parameters": [
+          {
+            "name": "idempotency-key",
+            "in": "header",
+            "description": "UUID único por operación",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTransferDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferResponseDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": ["transfers"]
+      }
+    },
+    "/api/fx/official": {
+      "get": {
+        "operationId": "fxOfficial",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfficialFxRateDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["fx"]
+      }
+    },
+    "/api/fx/history": {
+      "get": {
+        "operationId": "fxHistory",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FxHistoryPointDto_Output"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": ["fx"]
+      }
+    },
+    "/api/fx/quote": {
+      "get": {
+        "operationId": "fxQuote",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BankFxQuoteDto_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["fx"]
+      }
+    }
+  },
+  "info": {
+    "title": "Qolqa BFF",
+    "description": "API REST de Qolqa Banca Digital (las consultas de lectura van por GraphQL)",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "CsrfTokenResponseDto_Output": {
+        "type": "object",
+        "properties": {
+          "csrfToken": {
+            "type": "string"
+          }
+        },
+        "required": ["csrfToken"],
+        "additionalProperties": false
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 254,
+            "format": "email",
+            "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128
+          }
+        },
+        "required": ["email", "password"]
+      },
+      "LoginChallengeResponseDto_Output": {
+        "type": "object",
+        "properties": {
+          "challengeToken": {
+            "type": "string"
+          },
+          "expiresIn": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": ["challengeToken", "expiresIn"],
+        "additionalProperties": false
+      },
+      "VerifyOtpDto": {
+        "type": "object",
+        "properties": {
+          "challengeToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2048
+          },
+          "code": {
+            "type": "string",
+            "pattern": "^\\d{6}$"
+          }
+        },
+        "required": ["challengeToken", "code"]
+      },
+      "AccessTokenResponseDto_Output": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "expiresIn": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "fullName": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              }
+            },
+            "required": ["id", "fullName", "email"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["accessToken", "expiresIn", "user"],
+        "additionalProperties": false
+      },
+      "WsTicketResponseDto_Output": {
+        "type": "object",
+        "properties": {
+          "ticket": {
+            "type": "string"
+          },
+          "expiresIn": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": ["ticket", "expiresIn"],
+        "additionalProperties": false
+      },
+      "CreateTransferDto": {
+        "type": "object",
+        "properties": {
+          "fromAccountId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "toAccountNumber": {
+            "type": "string",
+            "pattern": "^\\d{14}$"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^\\d{1,9}(\\.\\d{1,2})?$"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 60,
+            "pattern": "^[\\p{L}\\p{N} .,\\-_#/()]*$"
+          },
+          "otp": {
+            "type": "string",
+            "pattern": "^\\d{6}$"
+          }
+        },
+        "required": [
+          "fromAccountId",
+          "toAccountNumber",
+          "amount",
+          "description",
+          "otp"
+        ]
+      },
+      "TransferResponseDto_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["COMPLETED"]
+          },
+          "amountCents": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "currency": {
+            "type": "string",
+            "enum": ["PEN", "USD"]
+          },
+          "toAccountNumberMasked": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "amountCents",
+          "currency",
+          "toAccountNumberMasked",
+          "createdAt"
+        ],
+        "additionalProperties": false
+      },
+      "OfficialFxRateDto_Output": {
+        "type": "object",
+        "properties": {
+          "buy": {
+            "type": "number"
+          },
+          "sell": {
+            "type": "number"
+          },
+          "date": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string",
+            "enum": ["BCRP"]
+          }
+        },
+        "required": ["buy", "sell", "date", "source"],
+        "additionalProperties": false
+      },
+      "FxHistoryPointDto_Output": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string"
+          },
+          "sell": {
+            "type": "number"
+          }
+        },
+        "required": ["date", "sell"],
+        "additionalProperties": false
+      },
+      "BankFxQuoteDto_Output": {
+        "type": "object",
+        "properties": {
+          "buy": {
+            "type": "number"
+          },
+          "sell": {
+            "type": "number"
+          },
+          "official": {
+            "type": "object",
+            "properties": {
+              "buy": {
+                "type": "number"
+              },
+              "sell": {
+                "type": "number"
+              },
+              "date": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string",
+                "enum": ["BCRP"]
+              }
+            },
+            "required": ["buy", "sell", "date", "source"],
+            "additionalProperties": false
+          },
+          "simulated": {
+            "type": "boolean",
+            "enum": [true]
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": ["buy", "sell", "official", "simulated", "updatedAt"],
+        "additionalProperties": false
+      }
+    }
+  }
+}

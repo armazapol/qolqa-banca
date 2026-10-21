@@ -10,7 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiNoContentResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import type {
   AccessTokenResponse,
@@ -19,6 +19,7 @@ import type {
   WsTicketResponse,
 } from '@qolqa/contracts';
 import type { Request, Response } from 'express';
+import { ZodResponse } from 'nestjs-zod';
 import { ReqMeta, type RequestMeta } from '../common/request-context';
 import {
   cookieNames,
@@ -34,7 +35,14 @@ import {
   CurrentUser,
 } from './access-token.guard';
 import { REFRESH_TOKEN_TTL_MS, WS_TICKET_TTL_MS } from './auth.constants';
-import { LoginDto, VerifyOtpDto } from './auth.dto';
+import {
+  AccessTokenResponseDto,
+  CsrfTokenResponseDto,
+  LoginChallengeResponseDto,
+  LoginDto,
+  VerifyOtpDto,
+  WsTicketResponseDto,
+} from './auth.dto';
 import { AuthService } from './auth.service';
 import { WsTicketService } from './ws-ticket.service';
 
@@ -59,6 +67,7 @@ export class AuthController {
 
   /** Emite el token CSRF (cookie legible + cuerpo) antes de usar refresh/logout. */
   @Get('csrf')
+  @ZodResponse({ status: 200, type: CsrfTokenResponseDto })
   issueCsrf(@Res({ passthrough: true }) res: Response): CsrfTokenResponse {
     const csrfToken = this.csrf.issue();
     res.cookie(
@@ -70,7 +79,7 @@ export class AuthController {
   }
 
   @Post('login')
-  @HttpCode(HttpStatus.OK)
+  @ZodResponse({ status: 200, type: LoginChallengeResponseDto })
   @Throttle(AUTH_THROTTLE)
   login(
     @Body() dto: LoginDto,
@@ -80,7 +89,7 @@ export class AuthController {
   }
 
   @Post('otp')
-  @HttpCode(HttpStatus.OK)
+  @ZodResponse({ status: 200, type: AccessTokenResponseDto })
   @Throttle(AUTH_THROTTLE)
   async verifyOtp(
     @Body() dto: VerifyOtpDto,
@@ -93,7 +102,7 @@ export class AuthController {
   }
 
   @Post('refresh')
-  @HttpCode(HttpStatus.OK)
+  @ZodResponse({ status: 200, type: AccessTokenResponseDto })
   @UseGuards(CsrfGuard)
   async refresh(
     @Req() req: Request,
@@ -115,6 +124,7 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiNoContentResponse({ description: 'Sesión cerrada' })
   @UseGuards(CsrfGuard)
   async logout(
     @Req() req: Request,
@@ -126,7 +136,7 @@ export class AuthController {
   }
 
   @Post('ws-ticket')
-  @HttpCode(HttpStatus.OK)
+  @ZodResponse({ status: 200, type: WsTicketResponseDto })
   @UseGuards(AccessTokenGuard)
   issueWsTicket(@CurrentUser() user: AuthUser): WsTicketResponse {
     return {

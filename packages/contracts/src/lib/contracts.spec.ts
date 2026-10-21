@@ -17,7 +17,9 @@ describe('money', () => {
   });
 
   it('formatea en soles con locale es-PE', () => {
-    expect(formatCents(123405, 'PEN')).toMatch(/S\/\s?1,234\.05/);
+    expect(formatCents(123405, 'PEN')).toBe('S/ 1,234.05');
+    expect(formatCents(50, 'USD')).toBe('US$ 0.50');
+    expect(formatCents(-2550, 'PEN')).toBe('-S/ 25.50');
   });
 });
 

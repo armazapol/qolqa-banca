@@ -22,11 +22,19 @@ export function toCents(amount: string): number {
   return Number(units) * 100 + Number(decimals.padEnd(2, '0'));
 }
 
-const formatters: Record<Currency, Intl.NumberFormat> = {
-  PEN: new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }),
-  USD: new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'USD' }),
+/** Símbolos usados en Perú (SBS): "S/" y "US$". Intl con es-PE muestra "USD". */
+export const CURRENCY_SYMBOL: Record<Currency, string> = {
+  PEN: 'S/',
+  USD: 'US$',
 };
 
+const amountFormatter = new Intl.NumberFormat('es-PE', {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+/** 123405, 'USD' → "US$ 1,234.05"; los negativos llevan el signo antes del símbolo. */
 export function formatCents(cents: number, currency: Currency): string {
-  return formatters[currency].format(cents / 100);
+  const sign = cents < 0 ? '-' : '';
+  return `${sign}${CURRENCY_SYMBOL[currency]} ${amountFormatter.format(Math.abs(cents) / 100)}`;
 }
