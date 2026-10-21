@@ -5,19 +5,18 @@ export default [
   ...nx.configs['flat/typescript'],
   ...nx.configs['flat/javascript'],
   {
-    ignores: ['**/dist', '**/out-tsc', '**/coverage', '**/.nx'],
+    ignores: [
+      '**/dist',
+      '**/out-tsc',
+      '**/coverage',
+      '**/test-output',
+      '**/.nx',
+    ],
   },
   {
-    files: [
-      '**/*.ts',
-      '**/*.tsx',
-      '**/*.js',
-      '**/*.jsx',
-      '**/*.mjs',
-      '**/*.cjs',
-    ],
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
-      // Las capas (scope/type) se definen en docs/adr/0002 y se aplican al crear cada proyecto.
+      // Cada app solo puede importar código de su propio scope o de scope:shared (ADR-0002).
       '@nx/enforce-module-boundaries': [
         'error',
         {
@@ -25,8 +24,20 @@ export default [
           allow: [],
           depConstraints: [
             {
-              sourceTag: '*',
-              onlyDependOnLibsWithTags: ['*'],
+              sourceTag: 'scope:api',
+              onlyDependOnLibsWithTags: ['scope:api', 'scope:shared'],
+            },
+            {
+              sourceTag: 'scope:shell',
+              onlyDependOnLibsWithTags: ['scope:shell', 'scope:shared'],
+            },
+            {
+              sourceTag: 'scope:investments',
+              onlyDependOnLibsWithTags: ['scope:investments', 'scope:shared'],
+            },
+            {
+              sourceTag: 'scope:shared',
+              onlyDependOnLibsWithTags: ['scope:shared'],
             },
           ],
         },

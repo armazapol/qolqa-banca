@@ -1,0 +1,23 @@
+# Base de datos local (ADR-0013). Misma versión mayor que Neon en producción.
+# El puerto 5434 evita conflicto con un PostgreSQL local en 5432 y con otros contenedores (5433).
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: qolqa-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: qolqa
+      POSTGRES_PASSWORD: qolqa_dev_only
+      POSTGRES_DB: qolqa
+    ports:
+      - '127.0.0.1:5434:5432'
+    volumes:
+      - qolqa-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U qolqa -d qolqa']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  qolqa-pgdata:

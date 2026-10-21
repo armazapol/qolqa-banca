@@ -1,0 +1,194 @@
+// Modelo de datos de Qolqa Banca Digital (ADR-0013).
+// Los importes se guardan en céntimos (Int) para evitar errores de coma flotante.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Currency {
+  PEN
+  USD
+}
+
+enum AccountType {
+  CHECKING
+  SAVINGS
+}
+
+enum MovementType {
+  DEBIT
+  CREDIT
+}
+
+enum CardBrand {
+  VISA
+  MASTERCARD
+}
+
+enum CardStatus {
+  ACTIVE
+  BLOCKED
+}
+
+enum TransferStatus {
+  COMPLETED
+}
+
+model User {
+  id                 String    @id @default(uuid()) @db.Uuid
+  email              String    @unique
+  fullName           String
+  documentNumber     String    @unique // DNI
+  passwordHash       String
+  // Secreto TOTP cifrado con AES-256-GCM (ADR-0018). Nunca en texto plano.
+  totpSecretEnc      String
+  // Último paso TOTP aceptado: impide reutilizar el mismo código (RFC 6238 §5.2).
+  lastTotpStep       Int       @default(0)
+  failedAttempts     Int       @default(0)
+  lockedUntil        DateTime?
+  dailyLimitPenCents Int       @default(1000000) // S/ 10 000
+  dailyLimitUsdCents Int       @default(300000) // US$ 3 000
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  accounts      Account[]
+  cards         Card[]
+  transfers     Transfer[]
+  refreshTokens RefreshToken[]
+  holdings      Holding[]
+  auditLogs     AuditLog[]
+}
+
+model Account {
+  id           String      @id @default(uuid()) @db.Uuid
+  userId       String      @db.Uuid
+  type         AccountType
+  currency     Currency
+  number       String      @unique // 14 dígitos
+  cci          String      @unique // Código de Cuenta Interbancario, 20 dígitos
+  alias        String
+  balanceCents Int
+  createdAt    DateTime    @default(now())
+
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movements    Movement[]
+  cards        Card[]
+  outTransfers Transfer[] @relation("TransferFrom")
+  inTransfers  Transfer[] @relation("TransferTo")
+
+  @@index([userId])
+}
+
+model Card {
+  id          String     @id @default(uuid()) @db.Uuid
+  userId      String     @db.Uuid
+  accountId   String     @db.Uuid
+  brand       CardBrand
+  // PCI DSS: nunca se almacena el PAN completo, solo BIN (6) y últimos 4.
+  bin         String
+  last4       String
+  expiryMonth Int
+  expiryYear  Int
+  status      CardStatus @default(ACTIVE)
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Movement {
+  id                String       @id @default(uuid()) @db.Uuid
+  accountId         String       @db.Uuid
+  type              MovementType
+  amountCents       Int
+  balanceAfterCents Int
+  description       String
+  counterparty      String?
+  transferId        String?      @db.Uuid
+  createdAt         DateTime     @default(now())
+
+  account  Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  transfer Transfer? @relation(fields: [transferId], references: [id])
+
+  // Paginación por cursor ordenada por fecha.
+  @@index([accountId, createdAt(sort: Desc), id])
+}
+
+model Transfer {
+  id              String         @id @default(uuid()) @db.Uuid
+  userId          String         @db.Uuid
+  fromAccountId   String         @db.Uuid
+  toAccountId     String?        @db.Uuid
+  toAccountNumber String
+  amountCents     Int
+  currency        Currency
+  description     String
+  status          TransferStatus @default(COMPLETED)
+  // Evita transferencias duplicadas por doble clic o reintentos de red.
+  idempotencyKey  String
+  createdAt       DateTime       @default(now())
+
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fromAccount Account    @relation("TransferFrom", fields: [fromAccountId], references: [id])
+  toAccount   Account?   @relation("TransferTo", fields: [toAccountId], references: [id])
+  movements   Movement[]
+
+  @@unique([userId, idempotencyKey])
+  @@index([fromAccountId, createdAt])
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  // Todos los tokens rotados de una misma sesión comparten familia.
+  familyId  String    @db.Uuid
+  // SHA-256 del token: si la base de datos se filtra, los tokens no son utilizables.
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  userAgent String?
+  ip        String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([familyId])
+  @@index([userId])
+}
+
+model Holding {
+  id          String  @id @default(uuid()) @db.Uuid
+  userId      String  @db.Uuid
+  symbol      String // Par de Binance, p. ej. BTCUSDT
+  name        String
+  quantity    Decimal @db.Decimal(24, 8)
+  avgPriceUsd Decimal @db.Decimal(18, 2)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, symbol])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String?  @db.Uuid
+  action    String // LOGIN_PASSWORD, LOGIN_OTP, TRANSFER, TOKEN_REUSE...
+  outcome   String // SUCCESS | FAILURE
+  ip        String?
+  userAgent String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([action, createdAt])
+}

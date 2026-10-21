@@ -1,0 +1,102 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+"""
+Cuenta bancaria. El número completo solo se obtiene con revealAccountNumber.
+"""
+type AccountModel {
+  alias: String!
+
+  """Saldo en céntimos"""
+  balanceCents: Int!
+  currency: Currency!
+  id: ID!
+  numberMasked: String!
+  type: AccountType!
+}
+
+enum AccountType {
+  CHECKING
+  SAVINGS
+}
+
+enum CardBrand {
+  MASTERCARD
+  VISA
+}
+
+"""Tarjeta: solo BIN y últimos 4 dígitos (PCI DSS)"""
+type CardModel {
+  accountId: ID!
+  brand: CardBrand!
+  expiry: String!
+  id: ID!
+  maskedPan: String!
+  status: CardStatus!
+}
+
+enum CardStatus {
+  ACTIVE
+  BLOCKED
+}
+
+enum Currency {
+  PEN
+  USD
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+"""Posición de inversión. Decimales como texto para no perder precisión."""
+type HoldingModel {
+  avgPriceUsd: String!
+  id: ID!
+  name: String!
+  quantity: String!
+  symbol: String!
+}
+
+type MovementModel {
+  amountCents: Int!
+  balanceAfterCents: Int!
+  counterparty: String
+  createdAt: DateTime!
+  description: String!
+  id: ID!
+  type: MovementType!
+}
+
+"""Página de movimientos con paginación por cursor"""
+type MovementPage {
+  items: [MovementModel!]!
+  nextCursor: String
+}
+
+enum MovementType {
+  CREDIT
+  DEBIT
+}
+
+type ProfileModel {
+  dailyLimitPenCents: Int!
+  dailyLimitUsdCents: Int!
+  documentMasked: String!
+  email: String!
+  fullName: String!
+  id: ID!
+}
+
+type Query {
+  accountsList: [AccountModel!]!
+  cards: [CardModel!]!
+  holdings: [HoldingModel!]!
+  movements(accountId: ID!, after: String, first: Int! = 20): MovementPage!
+  profile: ProfileModel!
+
+  """Número completo de la cuenta. Acción auditada."""
+  revealAccountNumber(accountId: ID!): String!
+}

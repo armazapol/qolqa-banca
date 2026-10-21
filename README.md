@@ -18,10 +18,35 @@ Mini banca por internet ficticia (Perú): un proyecto de portafolio Frontend Sen
 - [Requisitos → herramientas → ubicación](docs/REQUISITOS.md)
 - [Decisiones de arquitectura (ADR)](docs/adr/)
 
-## Requisitos locales
+## Ejecutar en local
 
-- Node 24, pnpm 11
+Requisitos: Node 24, pnpm 11 y Docker.
 
 ```bash
 pnpm install
+docker compose up -d --wait            # PostgreSQL 17 en 127.0.0.1:5434
+cp apps/api/.env.example apps/api/.env # rellena los secretos (base64 de 32 bytes)
+pnpm nx run api:db-migrate             # aplica las migraciones
+pnpm nx run api:db-seed                # crea los usuarios de demo
+pnpm nx serve api                      # BFF en http://localhost:3000/api
 ```
+
+Para generar un secreto: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`
+
+| Recurso                       | URL                                   |
+| ----------------------------- | ------------------------------------- |
+| Swagger (REST)                | http://localhost:3000/api/docs        |
+| GraphQL (Apollo Sandbox)      | http://localhost:3000/api/graphql     |
+| Health check                  | http://localhost:3000/api/health      |
+| Tipo de cambio oficial (BCRP) | http://localhost:3000/api/fx/official |
+
+## Usuarios de demostración
+
+Contraseña de ambos: `Qolqa#Demo2026`. El segundo factor es **TOTP real**: añade el secreto a Google Authenticator, Microsoft Authenticator o 1Password ("introducir clave manualmente").
+
+| Usuario                      | Secreto TOTP                       |
+| ---------------------------- | ---------------------------------- |
+| `lucia.quispe@demo.qolqa.pe` | `FWSSOZW6G7NMMV4AQPTA6MEKI6S6RXBW` |
+| `mateo.huaman@demo.qolqa.pe` | `SJRTFE2SVRBSY6Y3SKWJCN2D56PWE22L` |
+
+> Estos secretos son públicos a propósito: pertenecen a datos ficticios de demostración.

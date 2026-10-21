@@ -21,7 +21,7 @@ Para demostrar seguridad real (cookies httpOnly, CSRF, CSP, CORS y rotación de 
 - **GraphQL** (Apollo, code-first): consultas de cuentas, movimientos y portafolio, donde la UI elige los campos que necesita.
 - **WebSocket:** tipo de cambio y notificaciones de operaciones.
 - APIs públicas consumidas, ninguna requiere API key:
-  - **Frankfurter**: tipos de cambio;
+  - ~~**Frankfurter**~~ → **BCRP**: tipos de cambio (ver ADR-0017; Frankfurter no publica PEN);
   - **Binance WebSocket**: precios.
 
 ## Consecuencias
