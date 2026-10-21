@@ -8,7 +8,11 @@ import {
   type EntryContext,
   ServerRouter,
 } from 'react-router';
-import { cspFromEnv } from './lib/csp/policy';
+import {
+  cspFromEnv,
+  isHttpsRequest,
+  isPrivateAreaPath,
+} from './lib/csp/policy';
 import { NonceProvider } from './lib/csp/nonce';
 import { sentryDataCollection, scrubEvent } from './lib/monitoring/scrub';
 
@@ -57,7 +61,11 @@ export default function handleRequest(
   if (import.meta.env.PROD) {
     responseHeaders.set(
       'Content-Security-Policy',
-      cspFromEnv([`'nonce-${nonce}'`], true),
+      cspFromEnv([`'nonce-${nonce}'`], {
+        production: true,
+        https: isHttpsRequest(request),
+        privateArea: isPrivateAreaPath(new URL(request.url).pathname),
+      }),
     );
     responseHeaders.set('X-Content-Type-Options', 'nosniff');
     responseHeaders.set('Referrer-Policy', 'strict-origin-when-cross-origin');

@@ -33,7 +33,9 @@ La política, compartida en `app/lib/csp/policy.ts`, incluye:
 
 ### Frontera de seguridad al entrar a la banca
 
-El orquestador de Native Federation inserta un _import map_ que se genera en tiempo de ejecución; un hash no puede autorizarlo, solo un nonce. Por eso **"Ingresar" abre un documento nuevo** (`reloadDocument`): la zona privada siempre corre bajo la CSP con nonce, y el _import map_ recibe ese nonce (`setImportMapFn` propio en `load-investments.ts`). El nonce del documento se lee de la propiedad `.nonce` de un script existente: el navegador lo oculta del atributo HTML.
+El orquestador de Native Federation genera el _import map_ en tiempo de ejecución; un hash no puede autorizarlo. Por eso **"Ingresar" abre un documento nuevo** (`reloadDocument`): la zona privada siempre corre bajo la CSP con nonce. El nonce del documento se lee de la propiedad `.nonce` de un script existente: el navegador lo oculta del atributo HTML.
+
+> **Actualizado por ADR-0022:** el _import map_ se carga con es-module-shims (_shim mode_) para que funcione en Firefox, y la CSP del área privada (`/ingresar`, `/app/*`) permite `script-src blob:`. Las páginas públicas no cambian.
 
 ## Problemas encontrados durante la verificación
 

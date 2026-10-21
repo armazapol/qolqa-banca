@@ -75,7 +75,9 @@ p {
 
   &--live {
     background: color-mix(in srgb, var(--inv-positive) 18%, transparent);
-    color: var(--inv-positive);
+    // Texto más oscuro que --inv-positive: 5,11:1 sobre el fondo de la etiqueta
+    // (con #1e7a46 era 4,17:1, por debajo de WCAG AA; lo detectó axe en E2E).
+    color: light-dark(#176b3c, #5cc98a);
   }
 }
 

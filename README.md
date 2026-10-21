@@ -45,6 +45,15 @@ Si cambias un endpoint REST o el esquema GraphQL del BFF, regenera el contrato c
 | Health check                  | http://localhost:3000/api/health      |
 | Tipo de cambio oficial (BCRP) | http://localhost:3000/api/fx/official |
 
+## Pruebas
+
+```bash
+pnpm nx run-many -t lint typecheck test   # ESLint, TypeScript y Jest en todo el monorepo
+pnpm nx e2e shell-react-e2e               # Playwright: requiere Docker (PostgreSQL) y openssl
+```
+
+La batería E2E crea la base `qolqa_e2e` (no toca la de desarrollo), compila los builds de producción y los sirve detrás de un proxy HTTPS en `https://localhost:4300` que imita a Vercel. Corre en Chromium, Firefox, WebKit y Pixel 7 (ADR-0022). La primera vez instala los navegadores con `pnpm exec playwright install`. Para repetirla sin recompilar: `E2E_SKIP_BUILD=1 pnpm nx e2e shell-react-e2e`.
+
 ## Variables de entorno opcionales
 
 GA4 y Sentry se activan solo si se configuran; sin ellas la app funciona igual (ADR-0021).

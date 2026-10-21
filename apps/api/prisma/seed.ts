@@ -5,7 +5,8 @@
  */
 import { hash } from '@node-rs/argon2';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { generateURI } from 'otplib';
+import { writeFileSync } from 'node:fs';
+import { generateSecret, generateURI } from 'otplib';
 import { ARGON2_OPTIONS } from '../src/auth/argon2-options';
 import { encryptAesGcm } from '../src/common/security/aes-gcm';
 import {
@@ -106,6 +107,101 @@ function requireEnv(name: string): string {
   return value;
 }
 
+interface DemoUser {
+  email: string;
+  fullName: string;
+  documentNumber: string;
+  totpSecret: string;
+  seed: number;
+}
+
+interface SeededAccount {
+  alias: string;
+  currency: Currency;
+  number: string;
+  balanceCents: number;
+}
+
+interface E2eUser {
+  email: string;
+  totpSecret: string;
+  accounts: SeededAccount[];
+}
+
+/** Crea un usuario con sus cuentas, movimientos, tarjeta y portafolio. */
+async function seedUser(
+  prisma: PrismaClient,
+  demo: DemoUser,
+  encryptionKey: Buffer,
+  passwordHash: string,
+): Promise<SeededAccount[]> {
+  const random = prng(demo.seed);
+  const user = await prisma.user.create({
+    data: {
+      email: demo.email,
+      fullName: demo.fullName,
+      documentNumber: demo.documentNumber,
+      passwordHash,
+      totpSecretEnc: encryptAesGcm(encryptionKey, demo.totpSecret),
+    },
+  });
+  const seeded: SeededAccount[] = [];
+
+  for (const [index, spec] of ACCOUNTS.entries()) {
+    const number = `${BANK_CODE}${String(index + 1).padStart(2, '0')}${digits(random, 9)}`;
+    const account = await prisma.account.create({
+      data: {
+        userId: user.id,
+        type: spec.type,
+        currency: spec.currency,
+        alias: spec.alias,
+        number,
+        // CCI (20 dígitos) = entidad (3) + cuenta (14) + control (3).
+        cci: `${BANK_CODE}${number}${digits(random, 3)}`,
+        balanceCents: 0,
+      },
+    });
+
+    const movements = buildMovements(random, spec.base, index === 0);
+    await prisma.movement.createMany({
+      data: movements.map((movement) => ({
+        ...movement,
+        accountId: account.id,
+      })),
+    });
+    const balanceCents = movements.at(-1)?.balanceAfterCents ?? spec.base;
+    await prisma.account.update({
+      where: { id: account.id },
+      data: { balanceCents },
+    });
+    seeded.push({
+      alias: spec.alias,
+      currency: spec.currency,
+      number,
+      balanceCents,
+    });
+
+    if (index === 0) {
+      await prisma.card.create({
+        data: {
+          userId: user.id,
+          accountId: account.id,
+          brand: demo.seed % 2 === 0 ? 'MASTERCARD' : 'VISA',
+          bin: demo.seed % 2 === 0 ? '555555' : '411111',
+          last4: digits(random, 4),
+          expiryMonth: 1 + Math.floor(random() * 12),
+          expiryYear: 2029,
+        },
+      });
+    }
+  }
+
+  await prisma.holding.createMany({
+    data: HOLDINGS.map((holding) => ({ ...holding, userId: user.id })),
+  });
+  return seeded;
+}
+
 async function main(): Promise<void> {
   const prisma = new PrismaClient({
     adapter: new PrismaPg({ connectionString: requireEnv('DATABASE_URL') }),
@@ -130,65 +226,7 @@ async function main(): Promise<void> {
     ]);
 
     for (const demo of USERS) {
-      const random = prng(demo.seed);
-      const user = await prisma.user.create({
-        data: {
-          email: demo.email,
-          fullName: demo.fullName,
-          documentNumber: demo.documentNumber,
-          passwordHash,
-          totpSecretEnc: encryptAesGcm(encryptionKey, demo.totpSecret),
-        },
-      });
-
-      for (const [index, spec] of ACCOUNTS.entries()) {
-        const number = `${BANK_CODE}${String(index + 1).padStart(2, '0')}${digits(random, 9)}`;
-        const account = await prisma.account.create({
-          data: {
-            userId: user.id,
-            type: spec.type,
-            currency: spec.currency,
-            alias: spec.alias,
-            number,
-            // CCI (20 dígitos) = entidad (3) + cuenta (14) + control (3).
-            cci: `${BANK_CODE}${number}${digits(random, 3)}`,
-            balanceCents: 0,
-          },
-        });
-
-        const movements = buildMovements(random, spec.base, index === 0);
-        await prisma.movement.createMany({
-          data: movements.map((movement) => ({
-            ...movement,
-            accountId: account.id,
-          })),
-        });
-        await prisma.account.update({
-          where: { id: account.id },
-          data: {
-            balanceCents: movements.at(-1)?.balanceAfterCents ?? spec.base,
-          },
-        });
-
-        if (index === 0) {
-          await prisma.card.create({
-            data: {
-              userId: user.id,
-              accountId: account.id,
-              brand: demo.seed % 2 === 0 ? 'MASTERCARD' : 'VISA',
-              bin: demo.seed % 2 === 0 ? '555555' : '411111',
-              last4: digits(random, 4),
-              expiryMonth: 1 + Math.floor(random() * 12),
-              expiryYear: 2029,
-            },
-          });
-        }
-      }
-
-      await prisma.holding.createMany({
-        data: HOLDINGS.map((holding) => ({ ...holding, userId: user.id })),
-      });
-
+      await seedUser(prisma, demo, encryptionKey, passwordHash);
       const uri = generateURI({
         issuer: 'Qolqa Banca Digital',
         label: demo.email,
@@ -196,6 +234,40 @@ async function main(): Promise<void> {
       });
       console.log(`✔ ${demo.email}\n  otpauth: ${uri}`);
     }
+
+    // Usuarios solo para E2E (ADR-0022): cada test usa el suyo, sin esperar
+    // a que caduque el paso TOTP del anterior. Nunca se crean en producción.
+    const e2eCount = Number(process.env['SEED_E2E_USERS'] ?? 0);
+    if (e2eCount > 0) {
+      const output = requireEnv('SEED_E2E_OUTPUT');
+      const e2eUsers: E2eUser[] = [];
+      for (let n = 1; n <= e2eCount; n++) {
+        const demo: DemoUser = {
+          email: `e2e-${String(n).padStart(3, '0')}@demo.qolqa.pe`,
+          fullName: `Usuario Prueba ${n}`,
+          documentNumber: String(80_000_000 + n),
+          totpSecret: generateSecret(),
+          seed: 1_000 + n,
+        };
+        const accounts = await seedUser(
+          prisma,
+          demo,
+          encryptionKey,
+          passwordHash,
+        );
+        e2eUsers.push({
+          email: demo.email,
+          totpSecret: demo.totpSecret,
+          accounts,
+        });
+      }
+      writeFileSync(
+        output,
+        `${JSON.stringify({ password: DEMO_PASSWORD, users: e2eUsers }, null, 2)}\n`,
+      );
+      console.log(`✔ ${e2eCount} usuarios E2E → ${output}`);
+    }
+
     console.log(`\nContraseña de demo: ${DEMO_PASSWORD}`);
   } finally {
     await prisma.$disconnect();

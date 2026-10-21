@@ -1,10 +1,27 @@
 {
-  "name": "shell-react-e2e",
+  "name": "@qolqa/shell-react-e2e",
   "version": "0.0.1",
   "private": true,
+  "type": "module",
   "nx": {
     "implicitDependencies": [
       "shell-react"
-    ]
+    ],
+    "name": "shell-react-e2e",
+    "targets": {
+      "e2e": {
+        "command": "node support/prepare.mjs && playwright test",
+        "options": {
+          "cwd": "apps/shell-react-e2e"
+        },
+        "cache": false
+      }
+    }
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@types/pg": "^8.23.1",
+    "otplib": "^13.5.0",
+    "pg": "^8.23.1"
   }
 }

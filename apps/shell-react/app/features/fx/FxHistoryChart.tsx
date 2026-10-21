@@ -31,7 +31,10 @@ export function FxHistoryChart({ points }: { points: FxHistoryPoint[] }) {
         fallback={<Skeleton variant="rounded" height={CHART_HEIGHT} />}
       >
         {() => (
-          <div aria-hidden="true">
+          // `inert` y no solo aria-hidden: el gráfico tiene elementos enfocables y un
+          // usuario de teclado no debe llegar a algo que el lector de pantalla no
+          // anuncia (axe: aria-hidden-focus). La tabla de abajo es la alternativa.
+          <div inert>
             <Suspense
               fallback={<Skeleton variant="rounded" height={CHART_HEIGHT} />}
             >

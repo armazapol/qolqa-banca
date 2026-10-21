@@ -51,6 +51,7 @@ for (const file of htmlFiles(CLIENT_DIR)) {
     wsOrigin: process.env['VITE_WS_URL'],
     sentryDsn: process.env['VITE_SENTRY_DSN'],
     analytics: Boolean(process.env['VITE_GA_MEASUREMENT_ID']),
+    // Las páginas estáticas siempre se sirven por HTTPS (Vercel; E2E también).
     upgradeInsecure: true,
   });
   console.log(`✔ ${routeOf(file)}: ${hashes.length} scripts inline con hash`);

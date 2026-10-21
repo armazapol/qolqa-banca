@@ -2,7 +2,6 @@ import {
   INVESTMENTS_REMOTE,
   type InvestmentsRemoteModule,
 } from '@qolqa/contracts';
-import type * as Orchestrator from '@softarc/native-federation-orchestrator';
 import { readDocumentNonce } from '../../lib/csp/nonce';
 
 /**
@@ -16,46 +15,42 @@ const REMOTE_ENTRY =
 
 let loading: Promise<void> | null = null;
 
-type SetImportMap = NonNullable<
-  NonNullable<
-    Parameters<typeof Orchestrator.initFederation>[1]
-  >['setImportMapFn']
->;
-
 /**
- * Igual que el setImportMapFn por defecto del orquestador, pero el <script
- * type="importmap"> lleva el nonce del documento: la CSP (ADR-0021) no admite
- * scripts inline sin nonce y el import map se genera en tiempo de ejecución.
+ * Import maps en "shim mode" (es-module-shims) en todos los navegadores
+ * (ADR-0022): un <script type="importmap"> añadido después de que la página
+ * cargó módulos lo rechaza Firefox ("Import maps are not allowed after a
+ * module load…"), y aquí el import map se genera al abrir Inversiones.
+ * `importmap-shim` no lo interpreta el navegador: es-module-shims resuelve los
+ * imports y ejecuta cada módulo desde una URL blob:, que la CSP permite solo en
+ * el área privada (isPrivateAreaPath); el nonce cubre los scripts que inyecta.
  */
-const setImportMapWithNonce: SetImportMap = (importMap, opts = {}) => {
-  if (opts.override) {
-    document.head
-      .querySelectorAll('script[type="importmap"]')
-      .forEach((script) => script.remove());
-  }
-  const script = document.createElement('script');
-  script.type = 'importmap';
-  const nonce = readDocumentNonce();
-  if (nonce) script.nonce = nonce;
-  script.text = JSON.stringify(importMap);
-  document.head.appendChild(script);
-  return Promise.resolve(importMap);
-};
+async function installModuleShims(): Promise<void> {
+  // Se asigna sin el tipo del paquete: declara `nonce` como boolean, pero su
+  // implementación (y la documentación) espera el valor del nonce.
+  Object.assign(window, {
+    esmsInitOptions: { shimMode: true, nonce: readDocumentNonce() },
+  });
+  await import('es-module-shims');
+}
 
 /**
  * Carga el microfrontend Angular solo en el navegador y solo al visitar
- * /app/inversiones. El orquestador (≈80 KB) también se descarga bajo demanda.
+ * /app/inversiones. El orquestador (≈80 KB) y es-module-shims también se
+ * descargan bajo demanda.
  */
 export function loadInvestmentsElement(): Promise<void> {
   loading ??= (async () => {
-    const { initFederation } =
-      await import('@softarc/native-federation-orchestrator');
+    await installModuleShims();
+    const [{ initFederation }, { useShimImportMap }] = await Promise.all([
+      import('@softarc/native-federation-orchestrator'),
+      import('@softarc/native-federation-orchestrator/options'),
+    ]);
     const { loadRemoteModule } = await initFederation(
       {
         [INVESTMENTS_REMOTE.name]: new URL(REMOTE_ENTRY, window.location.href)
           .href,
       },
-      { logLevel: 'error', setImportMapFn: setImportMapWithNonce },
+      { logLevel: 'error', ...useShimImportMap({ shimMode: true }) },
     );
     const remote = await loadRemoteModule<InvestmentsRemoteModule>(
       INVESTMENTS_REMOTE.name,

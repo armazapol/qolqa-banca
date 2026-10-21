@@ -3,23 +3,14 @@
   "compilerOptions": {
     "allowJs": true,
     "outDir": "out-tsc/playwright",
-    "sourceMap": false
+    "sourceMap": false,
+    // Playwright transpila los specs por su cuenta: imports sin extensión, como en un bundler.
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    // DOM: el código de page.evaluate / addInitScript corre en el navegador.
+    "lib": ["es2023", "dom", "dom.iterable"],
+    "types": ["node"]
   },
-  "include": [
-    "**/*.ts",
-    "**/*.js",
-    "playwright.config.mts",
-    "src/**/*.spec.ts",
-    "src/**/*.spec.js",
-    "src/**/*.test.ts",
-    "src/**/*.test.js",
-    "src/**/*.d.ts"
-  ],
-  "exclude": [
-    "out-tsc",
-    "test-output",
-    "eslint.config.js",
-    "eslint.config.mjs",
-    "eslint.config.cjs"
-  ]
+  "include": ["playwright.config.mts", "src/**/*.ts", "support/**/*.mjs"],
+  "exclude": ["out-tsc", "test-output"]
 }

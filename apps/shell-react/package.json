@@ -65,6 +65,25 @@
         },
         "outputs": [
           "{projectRoot}/build"
+        ],
+        "inputs": [
+          "production",
+          "^production",
+          {
+            "env": "VITE_GA_MEASUREMENT_ID"
+          },
+          {
+            "env": "VITE_SENTRY_DSN"
+          },
+          {
+            "env": "VITE_SENTRY_ENVIRONMENT"
+          },
+          {
+            "env": "VITE_WS_URL"
+          },
+          {
+            "env": "VITE_INVESTMENTS_REMOTE_ENTRY"
+          }
         ]
       },
       "test": {
@@ -103,6 +122,7 @@
     "@softarc/native-federation-orchestrator": "^4.8.0",
     "@tanstack/react-query": "^5.104.5",
     "@tanstack/react-query-devtools": "^5.104.5",
+    "es-module-shims": "^2.8.4",
     "isbot": "^4.4.0",
     "motion": "^14.4.0",
     "react": "^19.0.0",

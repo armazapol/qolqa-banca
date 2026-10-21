@@ -14,6 +14,11 @@ export interface CspOptions {
   analytics: boolean;
   /** En producción se fuerza HTTPS para cualquier recurso. */
   upgradeInsecure: boolean;
+  /**
+   * Área privada: el microfrontend Angular se carga con es-module-shims, que
+   * ejecuta los módulos desde URLs blob: (ADR-0022). Las páginas públicas no lo necesitan.
+   */
+  blobModules?: boolean;
 }
 
 const GA_SCRIPT = ['https://www.googletagmanager.com'];
@@ -45,7 +50,12 @@ export function buildCsp(options: CspOptions): string {
   const directives: Record<string, string[]> = {
     'default-src': ["'self'"],
     // Sin 'unsafe-inline': cada script inline lleva nonce o está en la lista de hashes.
-    'script-src': ["'self'", ...options.scriptTokens, ...(ga ? GA_SCRIPT : [])],
+    'script-src': [
+      "'self'",
+      ...options.scriptTokens,
+      ...(options.blobModules ? ['blob:'] : []),
+      ...(ga ? GA_SCRIPT : []),
+    ],
     // MUI (Emotion) y Angular inyectan <style> en tiempo de ejecución.
     'style-src': ["'self'", "'unsafe-inline'"],
     'img-src': ["'self'", 'data:', ...(ga ? GA_CONNECT : [])],
@@ -73,18 +83,40 @@ export function buildCsp(options: CspOptions): string {
   return policy.join('; ');
 }
 
+/**
+ * ¿El documento se sirve por HTTPS? Detrás de Vercel llega en x-forwarded-proto.
+ * `upgrade-insecure-requests` solo tiene sentido en HTTPS: sobre http://localhost
+ * WebKit lo aplica igual y bloquea todos los recursos (lo detectó la batería E2E).
+ */
+export function isHttpsRequest(request: Request): boolean {
+  return (
+    request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim() ===
+      'https' || new URL(request.url).protocol === 'https:'
+  );
+}
+
+/**
+ * Documentos del área privada: /ingresar y /app/*. Desde las páginas públicas se
+ * llega con navegación completa (reloadDocument), así que su CSP es la que rige
+ * mientras dura la sesión.
+ */
+export function isPrivateAreaPath(pathname: string): boolean {
+  return /^\/(ingresar|app)(\/|$)/.test(pathname);
+}
+
 /** Configuración tomada de las variables de entorno del build. */
 export function cspFromEnv(
   scriptTokens: string[],
-  production: boolean,
+  options: { production: boolean; https: boolean; privateArea?: boolean },
 ): string {
   return buildCsp({
     scriptTokens,
     wsOrigin:
       import.meta.env.VITE_WS_URL ??
-      (production ? undefined : 'http://localhost:3000'),
+      (options.production ? undefined : 'http://localhost:3000'),
     sentryDsn: import.meta.env.VITE_SENTRY_DSN,
     analytics: Boolean(import.meta.env.VITE_GA_MEASUREMENT_ID),
-    upgradeInsecure: production,
+    upgradeInsecure: options.production && options.https,
+    blobModules: options.privateArea,
   });
 }

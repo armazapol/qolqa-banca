@@ -1,4 +1,4 @@
-import { buildCsp } from '../../app/lib/csp/policy';
+import { buildCsp, isPrivateAreaPath } from '../../app/lib/csp/policy';
 
 const directive = (csp: string, name: string) =>
   csp
@@ -59,4 +59,27 @@ describe('buildCsp', () => {
     );
     expect(connect.join(' ')).not.toContain('clave');
   });
+
+  it('permite módulos blob: solo cuando se pide (área privada, es-module-shims)', () => {
+    expect(directive(buildCsp(base), 'script-src')).not.toContain('blob:');
+    expect(
+      directive(buildCsp({ ...base, blobModules: true }), 'script-src'),
+    ).toContain('blob:');
+  });
+});
+
+describe('isPrivateAreaPath', () => {
+  it.each(['/ingresar', '/app', '/app/', '/app/inversiones'])(
+    '%s es área privada',
+    (path) => {
+      expect(isPrivateAreaPath(path)).toBe(true);
+    },
+  );
+
+  it.each(['/', '/tipo-de-cambio', '/seguridad', '/application', '/ingresarx'])(
+    '%s no lo es',
+    (path) => {
+      expect(isPrivateAreaPath(path)).toBe(false);
+    },
+  );
 });
