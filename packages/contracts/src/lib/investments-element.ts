@@ -30,6 +30,8 @@ export interface InvestmentsEventDetail {
   [INVESTMENTS_EVENTS.error]: {
     message: string;
     kind: 'auth' | 'network' | 'unknown';
+    /** Solo en errores no controlados: el shell lo reporta a Sentry (ADR-0021). */
+    stack?: string;
   };
   [INVESTMENTS_EVENTS.analytics]: {
     name: string;

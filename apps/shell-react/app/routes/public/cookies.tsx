@@ -1,4 +1,5 @@
 import Typography from '@mui/material/Typography';
+import { ConsentSettings } from '../../components/ConsentSettings';
 import { ProsePage } from '../../components/ProsePage';
 import type { Route } from './+types/cookies';
 
@@ -41,6 +42,7 @@ export default function Cookies() {
         sitio de forma agregada y sin datos personales ni importes. Puedes
         cambiar tu decisión en cualquier momento.
       </Typography>
+      <ConsentSettings />
     </ProsePage>
   );
 }

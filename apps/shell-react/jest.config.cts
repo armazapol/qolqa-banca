@@ -7,7 +7,14 @@ module.exports = {
   testMatch: ['<rootDir>/tests/**/*.spec.{ts,tsx}'],
   transform: {
     '^(?!.*\\.(js|mjs|jsx|ts|tsx|css|json)$)': '@nx/react/plugins/jest',
-    '^.+\\.(mjs|[tj]sx?)$': ['babel-jest', { presets: ['@nx/react/babel'] }],
+    '^.+\\.(mjs|[tj]sx?)$': [
+      'babel-jest',
+      {
+        presets: ['@nx/react/babel'],
+        // import.meta.env (Vite) → process.env: Jest no admite import.meta en CommonJS.
+        plugins: ['babel-plugin-transform-vite-meta-env'],
+      },
+    ],
   },
   moduleNameMapper: {
     '^@qolqa/contracts$': '<rootDir>/../../packages/contracts/src/index.ts',

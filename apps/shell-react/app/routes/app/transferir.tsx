@@ -27,6 +27,7 @@ import { Link } from 'react-router';
 import { z } from 'zod';
 import { dashboardQuery } from '../../features/accounts/queries';
 import { transfersCreate } from '../../generated/rest/transfers/transfers';
+import { trackEvent } from '../../lib/analytics';
 import { ApiError, errorMessage } from '../../lib/api/errors';
 import { formatCents, formatDateTime } from '../../lib/format';
 
@@ -71,6 +72,8 @@ export default function Transferir() {
         { headers: { [IDEMPOTENCY_HEADER]: idempotencyKey.current ?? '' } },
       ),
     onSuccess: (result) => {
+      // Sin importe ni cuentas: solo la moneda (ADR-0021).
+      trackEvent('transfer_completed', { currency: result.currency });
       setReceipt(result);
       void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       void queryClient.invalidateQueries({ queryKey: ['movements'] });

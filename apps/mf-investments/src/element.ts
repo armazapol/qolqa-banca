@@ -1,4 +1,5 @@
 import {
+  ErrorHandler,
   provideBrowserGlobalErrorListeners,
   provideZonelessChangeDetection,
 } from '@angular/core';
@@ -6,6 +7,7 @@ import { createCustomElement } from '@angular/elements';
 import { createApplication } from '@angular/platform-browser';
 import { INVESTMENTS_ELEMENT_TAG } from '@qolqa/contracts';
 import { InvestmentsComponent } from './app/investments.component';
+import { ShellErrorHandler } from './app/shell-error-handler';
 
 let defining: Promise<void> | null = null;
 
@@ -21,6 +23,7 @@ export function defineInvestmentsElement(): Promise<void> {
       providers: [
         provideZonelessChangeDetection(),
         provideBrowserGlobalErrorListeners(),
+        { provide: ErrorHandler, useClass: ShellErrorHandler },
       ],
     });
     const element = createCustomElement(InvestmentsComponent, {

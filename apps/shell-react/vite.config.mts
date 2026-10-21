@@ -1,6 +1,8 @@
 import { reactRouter } from '@react-router/dev/vite';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
+import { VitePWA } from 'vite-plugin-pwa';
+import { pwaOptions } from './pwa.config.ts';
 
 const API_TARGET = process.env.API_PROXY_TARGET ?? 'http://localhost:3000';
 const INVESTMENTS_TARGET =
@@ -27,7 +29,7 @@ export default defineConfig(() => ({
     port: 5173,
     host: 'localhost',
   },
-  plugins: [tailwindcss(), reactRouter()],
+  plugins: [tailwindcss(), reactRouter(), VitePWA(pwaOptions)],
   // Pre-optimiza las dependencias de todas las rutas al arrancar: sin recargas
   // inesperadas la primera vez que se visita cada ruta en desarrollo.
   optimizeDeps: { entries: ['./app/**/*.tsx'] },

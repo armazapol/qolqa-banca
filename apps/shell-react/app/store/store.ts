@@ -1,10 +1,12 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
+import { consentSlice } from './consent-slice';
 import { sessionSlice } from './session-slice';
 import { uiSlice } from './ui-slice';
 
 const rootReducer = combineReducers({
   session: sessionSlice.reducer,
+  consent: consentSlice.reducer,
   ui: uiSlice.reducer,
 });
 

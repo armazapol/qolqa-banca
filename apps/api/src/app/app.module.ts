@@ -1,12 +1,13 @@
 import { ApolloDriver, type ApolloDriverConfig } from '@nestjs/apollo';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import { ZodSerializerInterceptor, ZodValidationPipe } from 'nestjs-zod';
+import { SentryGlobalFilter, SentryModule } from '@sentry/nestjs/setup';
 import { LoggerModule } from 'nestjs-pino';
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
@@ -25,6 +26,7 @@ import { TransfersModule } from '../transfers/transfers.module';
 
 @Module({
   imports: [
+    SentryModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       validate: validateEnv,
@@ -92,6 +94,8 @@ import { TransfersModule } from '../transfers/transfers.module';
   ],
   controllers: [HealthController],
   providers: [
+    // Reporta a Sentry los errores no controlados (no los 4xx esperados).
+    { provide: APP_FILTER, useClass: SentryGlobalFilter },
     { provide: APP_PIPE, useClass: ZodValidationPipe },
     // Serializa las respuestas con su esquema Zod: los campos no declarados nunca salen.
     { provide: APP_INTERCEPTOR, useClass: ZodSerializerInterceptor },

@@ -1,3 +1,6 @@
+// PRIMER import de la app: React Router evalúa root antes que entry.client y
+// que el resto de rutas. Zod sin JIT para la CSP sin 'unsafe-eval' (ADR-0021).
+import './lib/zod-config';
 import fontUrl from '@fontsource-variable/inter/index.css?url';
 import InitColorSchemeScript from '@mui/material/InitColorSchemeScript';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -14,8 +17,12 @@ import {
   Scripts,
   ScrollRestoration,
 } from 'react-router';
+import { AnalyticsTracker } from './components/AnalyticsTracker';
+import { ConsentBanner } from './components/ConsentBanner';
 import { NoticeCenter } from './components/NoticeCenter';
+import { PwaUpdatePrompt } from './components/PwaUpdatePrompt';
 import { StatusPage } from './components/StatusPage';
+import { useNonce } from './lib/csp/nonce';
 import { makeQueryClient } from './lib/query-client';
 import { getStore } from './store/store';
 import stylesUrl from './styles/app.css?url';
@@ -35,10 +42,20 @@ export const meta: MetaFunction = () => [
 export const links: LinksFunction = () => [
   { rel: 'stylesheet', href: fontUrl },
   { rel: 'stylesheet', href: stylesUrl },
-  { rel: 'icon', href: '/favicon.ico' },
+  { rel: 'icon', href: '/icons/favicon.svg', type: 'image/svg+xml' },
+  {
+    rel: 'icon',
+    href: '/icons/favicon-32.png',
+    type: 'image/png',
+    sizes: '32x32',
+  },
+  { rel: 'manifest', href: '/manifest.webmanifest' },
+  { rel: 'apple-touch-icon', href: '/icons/apple-touch-icon.png' },
 ];
 
 export function Layout({ children }: { children: ReactNode }) {
+  // Nonce de la CSP para todos los scripts inline (ADR-0021).
+  const nonce = useNonce();
   return (
     // La clase light/dark la pone InitColorSchemeScript antes de hidratar (sin parpadeo).
     <html lang="es-PE" suppressHydrationWarning>
@@ -50,10 +67,14 @@ export function Layout({ children }: { children: ReactNode }) {
         <Links />
       </head>
       <body>
-        <InitColorSchemeScript attribute="class" defaultMode="system" />
+        <InitColorSchemeScript
+          attribute="class"
+          defaultMode="system"
+          nonce={nonce}
+        />
         {children}
-        <ScrollRestoration />
-        <Scripts />
+        <ScrollRestoration nonce={nonce} />
+        <Scripts nonce={nonce} />
       </body>
     </html>
   );
@@ -71,6 +92,9 @@ export default function App() {
           <MotionConfig reducedMotion="user">
             <Outlet />
             <NoticeCenter />
+            <ConsentBanner />
+            <AnalyticsTracker />
+            <PwaUpdatePrompt />
           </MotionConfig>
         </AppThemeProvider>
       </QueryClientProvider>

@@ -3,7 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {},
-  "sideEffects": false,
+  "sideEffects": [
+    "./app/lib/zod-config.ts",
+    "*.css"
+  ],
   "nx": {
     "name": "shell-react",
     "tags": [
@@ -55,6 +58,13 @@
         "dependsOn": [
           "^build",
           "codegen"
+        ],
+        "command": "react-router build && tsx scripts/csp-static.ts",
+        "options": {
+          "cwd": "apps/shell-react"
+        },
+        "outputs": [
+          "{projectRoot}/build"
         ]
       },
       "test": {
@@ -88,6 +98,7 @@
     "@react-router/node": "^7.14.2",
     "@react-router/serve": "^7.14.2",
     "@reduxjs/toolkit": "^2.13.0",
+    "@sentry/react-router": "^11.8.0",
     "@softarc/native-federation": "^4.8.1",
     "@softarc/native-federation-orchestrator": "^4.8.0",
     "@tanstack/react-query": "^5.104.5",
@@ -100,6 +111,8 @@
     "react-redux": "^9.3.0",
     "react-router": "^7.14.2",
     "socket.io-client": "^4.8.4",
+    "web-vitals": "^6.2.3",
+    "workbox-window": "^7.4.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {
@@ -114,10 +127,14 @@
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "babel-plugin-transform-vite-meta-env": "^1.0.3",
     "jest-axe": "^11.0.0",
     "jest-fixed-jsdom": "^0.0.11",
     "msw": "^2.15.0",
     "orval": "^8.43.0",
-    "tailwindcss": "^4.3.3"
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.15",
+    "vite-plugin-pwa": "^2.0.0",
+    "workbox-build": "^7.4.1"
   }
 }

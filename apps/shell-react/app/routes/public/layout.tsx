@@ -39,7 +39,13 @@ export default function PublicLayout() {
               ))}
             </ul>
             <ColorModeToggle />
-            <Button component={Link} to="/ingresar" variant="contained">
+            {/* reloadDocument: la banca se abre en un documento nuevo con CSP por nonce (ADR-0021). */}
+            <Button
+              component={Link}
+              to="/ingresar"
+              reloadDocument
+              variant="contained"
+            >
               Ingresar
             </Button>
           </nav>

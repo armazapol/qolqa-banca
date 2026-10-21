@@ -3,5 +3,6 @@ export * from './lib/fx.js';
 export * from './lib/investments-element.js';
 export * from './lib/masking.js';
 export * from './lib/money.js';
+export * from './lib/privacy.js';
 export * from './lib/realtime.js';
 export * from './lib/transfers.js';

@@ -45,6 +45,19 @@ Si cambias un endpoint REST o el esquema GraphQL del BFF, regenera el contrato c
 | Health check                  | http://localhost:3000/api/health      |
 | Tipo de cambio oficial (BCRP) | http://localhost:3000/api/fx/official |
 
+## Variables de entorno opcionales
+
+GA4 y Sentry se activan solo si se configuran; sin ellas la app funciona igual (ADR-0021).
+
+| Variable                 | Proyecto      | Para qué                                    |
+| ------------------------ | ------------- | ------------------------------------------- |
+| `VITE_GA_MEASUREMENT_ID` | shell (build) | Google Analytics 4, solo con consentimiento |
+| `VITE_SENTRY_DSN`        | shell (build) | Errores del navegador y del SSR             |
+| `VITE_WS_URL`            | shell (build) | Origen del BFF para WebSocket               |
+| `SENTRY_DSN`             | BFF           | Errores del servidor                        |
+
+Ejemplos en `apps/shell-react/.env.example` y `apps/api/.env.example`.
+
 ## Usuarios de demostración
 
 Contraseña de ambos: `Qolqa#Demo2026`. El segundo factor es **TOTP real**: añade el secreto a Google Authenticator, Microsoft Authenticator o 1Password ("introducir clave manualmente").

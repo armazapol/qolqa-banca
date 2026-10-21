@@ -1,74 +1,80 @@
-/**
- * By default, React Router will handle generating the HTTP Response for you.
- * You are free to delete this file if you'd like to, but if you ever want it revealed again, you can run `npx remix reveal` ✨
- * For more information, see https://reactrouter.com/explanation/special-files#entryservertsx
- */
-
-import { PassThrough } from 'node:stream';
-
-import type { AppLoadContext, EntryContext } from 'react-router';
 import { createReadableStreamFromReadable } from '@react-router/node';
-import { ServerRouter } from 'react-router';
-import { isbot } from 'isbot';
-import type { RenderToPipeableStreamOptions } from 'react-dom/server';
+import * as Sentry from '@sentry/react-router';
+import { randomBytes } from 'node:crypto';
+import type { ComponentProps } from 'react';
 import { renderToPipeableStream } from 'react-dom/server';
+import {
+  type AppLoadContext,
+  type EntryContext,
+  ServerRouter,
+} from 'react-router';
+import { cspFromEnv } from './lib/csp/policy';
+import { NonceProvider } from './lib/csp/nonce';
+import { sentryDataCollection, scrubEvent } from './lib/monitoring/scrub';
 
-export const streamTimeout = 5_000;
+const dsn = import.meta.env.VITE_SENTRY_DSN;
+Sentry.init({
+  dsn,
+  enabled: Boolean(dsn),
+  environment: import.meta.env.VITE_SENTRY_ENVIRONMENT ?? import.meta.env.MODE,
+  tracesSampleRate: 0.1,
+  dataCollection: sentryDataCollection,
+  beforeSend: scrubEvent,
+});
 
+/** El nonce llega a la app por contexto: lo usan <Scripts>, <ScrollRestoration> y el script de tema. */
+function NonceServerRouter(props: ComponentProps<typeof ServerRouter>) {
+  return (
+    <NonceProvider nonce={props.nonce}>
+      <ServerRouter {...props} />
+    </NonceProvider>
+  );
+}
+
+const nonces = new WeakMap<Request, string>();
+
+const sentryHandleRequest = Sentry.createSentryHandleRequest({
+  ServerRouter: NonceServerRouter as typeof ServerRouter,
+  renderToPipeableStream,
+  createReadableStreamFromReadable,
+  getNonce: ({ request }) => nonces.get(request),
+});
+
+/**
+ * Cada documento SSR recibe un nonce nuevo y su cabecera CSP (ADR-0021).
+ * En desarrollo no se aplica: Vite inyecta scripts inline para HMR.
+ */
 export default function handleRequest(
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
   routerContext: EntryContext,
-  _loadContext: AppLoadContext,
+  loadContext: AppLoadContext,
 ) {
-  return new Promise((resolve, reject) => {
-    let shellRendered = false;
-    const userAgent = request.headers.get('user-agent');
+  const nonce = randomBytes(16).toString('base64');
+  nonces.set(request, nonce);
 
-    // Ensure requests from bots and SPA Mode renders wait for all content to load before responding
-    // https://react.dev/reference/react-dom/server/renderToPipeableStream#waiting-for-all-content-to-load-for-crawlers-and-static-generation
-    const readyOption: keyof RenderToPipeableStreamOptions =
-      (userAgent && isbot(userAgent)) || routerContext.isSpaMode
-        ? 'onAllReady'
-        : 'onShellReady';
-
-    const { pipe, abort } = renderToPipeableStream(
-      <ServerRouter context={routerContext} url={request.url} />,
-      {
-        [readyOption]() {
-          shellRendered = true;
-          const body = new PassThrough();
-          const stream = createReadableStreamFromReadable(body);
-
-          responseHeaders.set('Content-Type', 'text/html');
-
-          resolve(
-            new Response(stream, {
-              headers: responseHeaders,
-              status: responseStatusCode,
-            }),
-          );
-
-          pipe(body);
-        },
-        onShellError(error: unknown) {
-          reject(error);
-        },
-        onError(error: unknown) {
-          responseStatusCode = 500;
-          // Log streaming rendering errors from inside the shell.  Don't log
-          // errors encountered during initial shell rendering since they'll
-          // reject and get logged in handleDocumentRequest.
-          if (shellRendered) {
-            console.error(error);
-          }
-        },
-      },
+  if (import.meta.env.PROD) {
+    responseHeaders.set(
+      'Content-Security-Policy',
+      cspFromEnv([`'nonce-${nonce}'`], true),
     );
+    responseHeaders.set('X-Content-Type-Options', 'nosniff');
+    responseHeaders.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+    responseHeaders.set(
+      'Permissions-Policy',
+      'camera=(), microphone=(), geolocation=(), payment=()',
+    );
+  }
 
-    // Abort the rendering stream after the `streamTimeout` so it has time to
-    // flush down the rejected boundaries
-    setTimeout(abort, streamTimeout + 1000);
-  });
+  return sentryHandleRequest(
+    request,
+    responseStatusCode,
+    responseHeaders,
+    routerContext,
+    loadContext,
+  );
 }
+
+/** Errores de loaders y del render en el servidor → Sentry (sin datos sensibles). */
+export const handleError = Sentry.createSentryHandleError({ logErrors: true });

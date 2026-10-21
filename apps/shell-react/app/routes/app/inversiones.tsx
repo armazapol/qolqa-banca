@@ -8,10 +8,12 @@ import {
   INVESTMENTS_EVENTS,
   type InvestmentsEventDetail,
 } from '@qolqa/contracts';
+import * as Sentry from '@sentry/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { loadInvestmentsElement } from '../../features/investments/load-investments';
+import { trackEvent } from '../../lib/analytics';
 import { notifySessionExpired, refreshSession } from '../../lib/api/session';
 import { tokenStore } from '../../lib/api/token-store';
 import { safeRedirect } from '../../lib/safe-redirect';
@@ -33,7 +35,6 @@ type EventOf<K extends keyof InvestmentsEventDetail> = CustomEvent<
 
 /** Punto de montaje del microfrontend Angular <bank-investments> (ADR-0003, ADR-0020). */
 export default function Inversiones() {
-  const element = useRef<HTMLElement>(null);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const remote = useQuery({
@@ -43,11 +44,12 @@ export default function Inversiones() {
     retry: 1,
   });
 
-  // Remote → shell: eventos del DOM (CustomEvent con composed: true).
+  /*
+   * Remote → shell (ADR-0010). Se escucha en window: llegan los eventos del
+   * elemento (bubbles + composed) y los errores no controlados que el
+   * ErrorHandler de Angular emite globalmente.
+   */
   useEffect(() => {
-    const node = element.current;
-    if (!node) return;
-
     const onNavigate = (event: Event) => {
       // El destino viene de otro bundle: se valida como cualquier redirección.
       void navigate(
@@ -57,20 +59,36 @@ export default function Inversiones() {
       );
     };
     const onError = (event: Event) => {
-      const { kind, message } = (
+      const { kind, message, stack } = (
         event as EventOf<typeof INVESTMENTS_EVENTS.error>
       ).detail;
-      if (kind === 'auth') notifySessionExpired();
-      else dispatch(noticeShown(message, 'error'));
+      if (kind === 'auth') return notifySessionExpired();
+      if (kind === 'unknown') {
+        // Una sola instancia de Sentry en la página: la del shell.
+        const error = new Error(message);
+        if (stack) error.stack = stack;
+        Sentry.captureException(error, {
+          tags: { microfrontend: 'mf-investments' },
+        });
+      }
+      dispatch(noticeShown(message, 'error'));
+    };
+    const onAnalytics = (event: Event) => {
+      const { name, params } = (
+        event as EventOf<typeof INVESTMENTS_EVENTS.analytics>
+      ).detail;
+      trackEvent(name, { ...params, microfrontend: 'mf-investments' });
     };
 
-    node.addEventListener(INVESTMENTS_EVENTS.navigate, onNavigate);
-    node.addEventListener(INVESTMENTS_EVENTS.error, onError);
+    window.addEventListener(INVESTMENTS_EVENTS.navigate, onNavigate);
+    window.addEventListener(INVESTMENTS_EVENTS.error, onError);
+    window.addEventListener(INVESTMENTS_EVENTS.analytics, onAnalytics);
     return () => {
-      node.removeEventListener(INVESTMENTS_EVENTS.navigate, onNavigate);
-      node.removeEventListener(INVESTMENTS_EVENTS.error, onError);
+      window.removeEventListener(INVESTMENTS_EVENTS.navigate, onNavigate);
+      window.removeEventListener(INVESTMENTS_EVENTS.error, onError);
+      window.removeEventListener(INVESTMENTS_EVENTS.analytics, onAnalytics);
     };
-  }, [remote.isSuccess, navigate, dispatch]);
+  }, [navigate, dispatch]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -103,7 +121,6 @@ export default function Inversiones() {
           <CardContent>
             {/* React 19 asigna estas props como propiedades JS del custom element, no como atributos. */}
             <bank-investments
-              ref={element}
               getAccessToken={getAccessToken}
               apiBaseUrl="/api"
             />

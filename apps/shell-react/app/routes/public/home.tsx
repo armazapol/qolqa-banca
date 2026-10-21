@@ -61,9 +61,11 @@ export default function Home() {
             protegida.
           </Typography>
           <div className="flex flex-wrap gap-3">
+            {/* reloadDocument: la banca se abre en un documento nuevo con CSP por nonce (ADR-0021). */}
             <Button
               component={Link}
               to="/ingresar"
+              reloadDocument
               variant="contained"
               size="large"
             >

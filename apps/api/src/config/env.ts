@@ -23,6 +23,12 @@ export const envSchema = z.object({
   JWT_MFA_SECRET: secretKey,
   CSRF_SECRET: secretKey,
   TOTP_ENCRYPTION_KEY: secretKey,
+  // Vacío = desactivado (así se puede copiar .env.example tal cual).
+  SENTRY_DSN: z.preprocess(
+    (value) => (value === '' ? undefined : value),
+    z.url().optional(),
+  ),
+  SENTRY_ENVIRONMENT: z.string().optional(),
   BCRP_BASE_URL: z
     .url()
     .default('https://estadisticas.bcrp.gob.pe/estadisticas/series/api'),

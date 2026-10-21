@@ -19,6 +19,7 @@ import { z } from 'zod';
 import { ColorModeToggle } from '../components/ColorModeToggle';
 import { Logo } from '../components/Logo';
 import { useAuthLogin, useAuthVerifyOtp } from '../generated/rest/auth/auth';
+import { trackEvent } from '../lib/analytics';
 import { errorMessage } from '../lib/api/errors';
 import { storeSession } from '../lib/api/session';
 import { safeRedirect } from '../lib/safe-redirect';
@@ -122,6 +123,7 @@ function OtpStep({
     storeSession(session);
     queryClient.clear();
     dispatch(sessionStarted(session.user));
+    trackEvent('login', { method: 'totp' });
     await navigate(safeRedirect(params.get('redirigir')), { replace: true });
   });
 
