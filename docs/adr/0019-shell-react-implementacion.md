@@ -57,4 +57,14 @@
 ## Pendiente o limitaciones
 
 - React Router muestra avisos de _future flags_ de la v8; no se activan para no mezclar comportamientos de dos versiones mayores.
-- **DOMPurify** está instalado, pero hoy ninguna pantalla renderiza HTML dinámico: React escapa todo el texto y el lint prohíbe `dangerouslySetInnerHTML`. Queda pendiente decidir si se elimina o se reserva para contenido HTML futuro.
+
+## DOMPurify: eliminado (decisión del 2026-10-21)
+
+Estaba previsto en el ADR-0009, pero ninguna pantalla renderiza HTML dinámico. La protección XSS se consigue con:
+
+1. **Escapado automático de React** de todo texto interpolado.
+2. **`react/no-danger` en modo error**: el lint impide inyectar HTML sin escapar.
+3. **Validación con lista blanca** (Zod) de los textos libres que guarda el BFF, como la descripción de una transferencia.
+4. **CSP** (Helmet en el BFF; cabeceras del front en la Fase 4).
+
+Mantener una dependencia sin uso solo añade superficie de ataque y mantenimiento. Si en el futuro hubiera que mostrar HTML de terceros (p. ej. avisos del banco), se reintroduciría DOMPurify junto con un componente único que lo encapsule.

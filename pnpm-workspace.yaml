@@ -13,3 +13,5 @@ allowBuilds:
   esbuild: true
   prisma: true
   msw: false
+  lmdb: false
+  msgpackr-extract: false

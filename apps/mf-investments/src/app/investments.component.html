@@ -1,0 +1,126 @@
+<section class="investments" aria-labelledby="inv-title">
+  <header class="header">
+    <div>
+      <h2 id="inv-title">Mi portafolio</h2>
+      <p class="muted">
+        Criptoactivos valorizados con precios de mercado en tiempo real.
+      </p>
+    </div>
+    <span class="status" [class]="'status status--' + streamStatus()">
+      @switch (streamStatus()) {
+        @case ('live') {
+          En vivo
+        }
+        @case ('connecting') {
+          Conectando…
+        }
+        @default {
+          Sin conexión
+        }
+      }
+    </span>
+  </header>
+
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate" aria-label="Cargando portafolio" />
+  }
+
+  @if (error(); as message) {
+    <div class="error" role="alert">
+      <p>{{ message }}</p>
+      <button mat-stroked-button type="button" (click)="load()">
+        Reintentar
+      </button>
+    </div>
+  }
+
+  @if (holdings()) {
+    <div class="summary">
+      <mat-card appearance="outlined">
+        <mat-card-content>
+          <p class="label">Valor total</p>
+          <p class="big">{{ totals().valueUsd | money }}</p>
+          @if (totals().valuePen !== null) {
+            <p class="muted">
+              ≈ {{ totals().valuePen | money: 'PEN' }} al tipo de cambio oficial
+            </p>
+          }
+        </mat-card-content>
+      </mat-card>
+      <mat-card appearance="outlined">
+        <mat-card-content>
+          <p class="label">Ganancia / pérdida</p>
+          <p
+            class="big"
+            [class.positive]="totals().pnlUsd > 0"
+            [class.negative]="totals().pnlUsd < 0"
+          >
+            {{ totals().pnlUsd | money }}
+          </p>
+          <p class="muted">
+            {{ totals().pnlPct | pct }} sobre lo invertido ({{
+              totals().costUsd | money
+            }})
+          </p>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <caption class="sr-only">
+          Posiciones del portafolio con precio, valor y rentabilidad
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Activo</th>
+            <th scope="col" class="num">Cantidad</th>
+            <th scope="col" class="num">Precio</th>
+            <th scope="col" class="num hide-sm">24 h</th>
+            <th scope="col" class="num">Valor</th>
+            <th scope="col" class="num">Rentabilidad</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track row.symbol) {
+            <tr animate.enter="row-enter">
+              <th scope="row">
+                <span class="asset">{{ row.name }}</span>
+                <span class="muted symbol">{{
+                  row.symbol.replace('USDT', '')
+                }}</span>
+              </th>
+              <td class="num">{{ row.quantity | qty }}</td>
+              <td class="num">{{ row.price | money }}</td>
+              <td
+                class="num hide-sm"
+                [class.positive]="(row.change24hPct ?? 0) > 0"
+                [class.negative]="(row.change24hPct ?? 0) < 0"
+              >
+                {{ row.change24hPct | pct }}
+              </td>
+              <td class="num">{{ row.valueUsd | money }}</td>
+              <td
+                class="num"
+                [class.positive]="(row.pnlPct ?? 0) > 0"
+                [class.negative]="(row.pnlPct ?? 0) < 0"
+              >
+                {{ row.pnlPct | pct }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <footer class="footer">
+      <p class="muted">
+        Precios de Binance (USDT ≈ US$), actualizados cada segundo. Los valores
+        son referenciales y no constituyen asesoría de inversión.
+      </p>
+      <button mat-flat-button type="button" (click)="goToTransfer()">
+        Transferir fondos
+      </button>
+    </footer>
+  }
+</section>

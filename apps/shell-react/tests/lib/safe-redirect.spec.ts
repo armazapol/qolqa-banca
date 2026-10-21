@@ -13,7 +13,6 @@ describe('safeRedirect (prevención de open redirect)', () => {
     ['https://evil.com/app'],
     ['//evil.com/app'],
     ['/\\evil.com'],
-
     ['javascript:alert(1)'],
     ['/ingresar'],
     ['/app/../../evil'],

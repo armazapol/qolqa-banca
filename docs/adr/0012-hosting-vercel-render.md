@@ -6,7 +6,8 @@
 
 ## Decisión
 
-- **Vercel** (plan Hobby, gratuito): shell React y remote Angular estático.
+- **Vercel** (plan Hobby, gratuito): shell React y remote Angular estático (dos proyectos).
+- **Microfrontend bajo el mismo origen:** un rewrite en el proyecto del shell envía `/mf/investments/*` al proyecto del remote (ADR-0020). Así no hace falta CORS y la CSP puede limitar los scripts a `'self'`.
 - **Render** (plan gratuito): BFF NestJS. Se duerme tras unos 15 min sin uso y tarda unos 50 s en despertar; es aceptable para una demo.
 - **Mismo origen:** un rewrite en Vercel envía `/api/*` a Render.
   - Así la cookie del refresh token es de primera parte (Safari y Chrome bloquean las cookies de terceros) y puede usar `SameSite=Strict`.

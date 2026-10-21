@@ -1,0 +1,200 @@
+@use '@angular/material' as mat;
+
+/*
+ * Tema de Angular Material dentro del Shadow DOM (los estilos globales del
+ * remote no se cargan en el shell). `theme-type: color-scheme` genera colores
+ * con light-dark(): siguen automáticamente el color-scheme que fija el shell
+ * en <html>, que se hereda a través del Shadow DOM.
+ */
+:host {
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$cyan-palette,
+        theme-type: color-scheme,
+      ),
+      typography: (
+        plain-family: inherit,
+        brand-family: inherit,
+      ),
+      density: 0,
+    )
+  );
+
+  // Color principal de la marca Qolqa (mismos valores y contraste que el shell, ADR-0019).
+  --mat-sys-primary: light-dark(#0b4f5c, #7cc7d3);
+  --mat-sys-on-primary: light-dark(#ffffff, #062a31);
+  // Las tarjetas toman el fondo del contenedor del shell (sin "agujeros" en modo oscuro).
+  --mat-card-outlined-container-color: transparent;
+
+  --inv-positive: light-dark(#1e7a46, #5cc98a);
+  --inv-negative: light-dark(#b42318, #f97066);
+  --inv-border: light-dark(rgb(0 0 0 / 0.1), rgb(255 255 255 / 0.12));
+
+  display: block;
+  container-type: inline-size;
+  font-family: inherit;
+  color: var(--mat-sys-on-surface);
+}
+
+.investments {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+
+  h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+}
+
+p {
+  margin: 0;
+}
+
+.muted {
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.875rem;
+}
+
+.status {
+  border-radius: 999px;
+  padding: 0.125rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  background: var(--mat-sys-surface-container-high);
+
+  &--live {
+    background: color-mix(in srgb, var(--inv-positive) 18%, transparent);
+    color: var(--inv-positive);
+  }
+}
+
+.summary {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+}
+
+.label {
+  font-size: 0.875rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.big {
+  font-size: 1.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.positive {
+  color: var(--inv-positive);
+}
+
+.negative {
+  color: var(--inv-negative);
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--inv-border);
+  border-radius: 12px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+
+  th,
+  td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--inv-border);
+    white-space: nowrap;
+  }
+
+  thead th {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  tbody tr:last-child > * {
+    border-bottom: none;
+  }
+
+  .num {
+    text-align: right;
+  }
+}
+
+.asset {
+  display: block;
+  font-weight: 600;
+}
+
+.symbol {
+  font-size: 0.75rem;
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--inv-negative) 12%, transparent);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Entrada de filas con animate.enter (API nativa de Angular, sin @angular/animations). */
+.row-enter {
+  animation: row-in 250ms ease-out;
+}
+
+@keyframes row-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+@container (max-width: 34rem) {
+  .hide-sm {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row-enter {
+    animation: none;
+  }
+}

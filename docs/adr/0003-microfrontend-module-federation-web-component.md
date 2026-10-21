@@ -1,6 +1,6 @@
 # ADR-0003: Shell React + microfrontend Angular con Module Federation y Web Component
 
-- **Estado:** Aceptado
+- **Estado:** Aceptado (integración por Web Component vigente; la parte Webpack + Module Federation fue reemplazada por el ADR-0020)
 - **Fecha:** 2026-10-21
 
 ## Contexto

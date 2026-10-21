@@ -8,7 +8,7 @@ Mini banca por internet ficticia (Perú): un proyecto de portafolio Frontend Sen
 
 - **Monorepo:** Nx + pnpm
 - **Shell:** React + Vite + React Router v7, con Redux Toolkit, TanStack Query, MUI y Tailwind
-- **Microfrontend "Inversiones":** Angular + Angular Material + SCSS, expuesto como Web Component con Module Federation
+- **Microfrontend "Inversiones":** Angular 22 (zoneless) + Angular Material + SCSS, expuesto como Web Component con Native Federation
 - **BFF:** NestJS (REST + GraphQL + WebSocket), Prisma y PostgreSQL (Neon)
 - **Calidad:** Jest, Testing Library, Playwright, ESLint, Prettier, Husky y commitlint
 - **Infraestructura:** GitHub Actions, Vercel, Render, GA4 y Sentry
@@ -29,7 +29,8 @@ cp apps/api/.env.example apps/api/.env # rellena los secretos (base64 de 32 byte
 pnpm nx run api:db-migrate             # aplica las migraciones
 pnpm nx run api:db-seed                # crea los usuarios de demo
 pnpm nx serve api                      # BFF en http://localhost:3000/api
-pnpm nx dev shell-react                # banca web en http://localhost:5173
+pnpm nx serve mf-investments           # microfrontend Angular en http://localhost:4201
+pnpm nx dev shell-react                # banca web en http://localhost:5173 (incluye /mf/investments)
 ```
 
 Para generar un secreto: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`

@@ -15,4 +15,9 @@ export default [
       'react/no-danger': 'error',
     },
   },
+  {
+    // Los tests de seguridad usan literales de ataque a propósito (p. ej. "javascript:").
+    files: ['tests/**/*.{ts,tsx}'],
+    rules: { 'no-script-url': 'off' },
+  },
 ];
