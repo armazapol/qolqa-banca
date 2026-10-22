@@ -1,4 +1,5 @@
 import { toApiError } from './errors';
+import { trackSlowRequest } from './server-wake';
 import { notifySessionExpired, refreshSession } from './session';
 import { tokenStore } from './token-store';
 
@@ -21,13 +22,14 @@ function withAuth(init: RequestInit): RequestInit {
 
 /**
  * Cliente HTTP de toda la app y mutator de Orval (ADR-0019):
- * Bearer token, refresh transparente ante un 401 (un solo reintento) y errores tipados.
+ * Bearer token, refresh transparente ante un 401 (un solo reintento), errores
+ * tipados y aviso si el BFF tarda en responder porque está arrancando.
  */
 export async function apiFetch<T>(
   url: string,
   init: RequestInit = {},
 ): Promise<T> {
-  let response = await fetch(url, withAuth(init));
+  let response = await trackSlowRequest(fetch(url, withAuth(init)));
 
   if (
     response.status === 401 &&
@@ -38,7 +40,7 @@ export async function apiFetch<T>(
       notifySessionExpired();
       throw await toApiError(response);
     }
-    response = await fetch(url, withAuth(init));
+    response = await trackSlowRequest(fetch(url, withAuth(init)));
   }
 
   if (!response.ok) throw await toApiError(response);

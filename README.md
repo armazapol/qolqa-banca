@@ -13,6 +13,17 @@ Mini banca por internet ficticia (Perú): un proyecto de portafolio Frontend Sen
 - **Calidad:** Jest, Testing Library, Playwright, ESLint, Prettier, Husky y commitlint
 - **Infraestructura:** GitHub Actions, Vercel, Render, GA4 y Sentry
 
+## Despliegue
+
+| Pieza           | Dónde                                |
+| --------------- | ------------------------------------ |
+| Banca web (SSR) | https://qolqa-banca.vercel.app       |
+| Remote Angular  | https://qolqa-inversiones.vercel.app |
+| BFF             | Render (US East), detrás de `/api`   |
+| Base de datos   | Neon PostgreSQL 17 (US East)         |
+
+Solo despliega GitHub Actions y solo si pasan la calidad y los E2E. Cada PR recibe un preview y `main` va a producción (ADR-0023). La primera petición tras un rato sin uso puede tardar unos segundos mientras Render despierta el servidor. Los datos de demostración se restablecen cada día a las 05:00 (hora de Lima).
+
 ## Documentación
 
 - [Requisitos → herramientas → ubicación](docs/REQUISITOS.md)
@@ -64,6 +75,7 @@ GA4 y Sentry se activan solo si se configuran; sin ellas la app funciona igual (
 | `VITE_SENTRY_DSN`        | shell (build) | Errores del navegador y del SSR             |
 | `VITE_WS_URL`            | shell (build) | Origen del BFF para WebSocket               |
 | `SENTRY_DSN`             | BFF           | Errores del servidor                        |
+| `WEB_ORIGIN_PREVIEW`     | BFF           | Dominios de preview admitidos (un solo `*`) |
 
 Ejemplos en `apps/shell-react/.env.example` y `apps/api/.env.example`.
 

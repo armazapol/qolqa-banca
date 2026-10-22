@@ -3,6 +3,7 @@
 - **Estado:** Aceptado (el modo de renderizado está en el ADR-0004)
 - **Repositorio:** `qolqa-banca`, público en GitHub
 - **Fecha:** 2026-10-21
+- **Implementación:** ADR-0023 (Render se despliega por API con el commit exacto, en lugar de un deploy hook)
 
 ## Decisión
 

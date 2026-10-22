@@ -15,6 +15,7 @@ import { cleanupOpenApiDoc } from 'nestjs-zod';
 import { Logger } from 'nestjs-pino';
 import { writeFileSync } from 'node:fs';
 import { AppModule } from './app/app.module';
+import { createOriginMatcher } from './common/security/origins';
 import { SocketIoAdapter } from './common/socket-io.adapter';
 import type { Env } from './config/env';
 
@@ -52,7 +53,10 @@ async function bootstrap(): Promise<void> {
 
   const config = app.get<ConfigService<Env, true>>(ConfigService);
   const production = config.get('NODE_ENV', { infer: true }) === 'production';
-  const webOrigin = config.get('WEB_ORIGIN', { infer: true });
+  const isAllowedOrigin = createOriginMatcher(
+    config.get('WEB_ORIGIN', { infer: true }),
+    config.get('WEB_ORIGIN_PREVIEW', { infer: true }),
+  );
 
   // Detrás del proxy de Render/Vercel: req.ip debe ser la IP real del cliente.
   app.set('trust proxy', config.get('TRUST_PROXY', { infer: true }));
@@ -60,8 +64,11 @@ async function bootstrap(): Promise<void> {
   // CSP estricta en producción. En desarrollo se desactiva para Swagger UI y Apollo Sandbox.
   app.use(helmet({ contentSecurityPolicy: production ? undefined : false }));
   app.use(cookieParser());
-  app.enableCors({ origin: webOrigin, credentials: true });
-  app.useWebSocketAdapter(new SocketIoAdapter(app, webOrigin));
+  app.enableCors({
+    origin: (origin, callback) => callback(null, isAllowedOrigin(origin)),
+    credentials: true,
+  });
+  app.useWebSocketAdapter(new SocketIoAdapter(app, isAllowedOrigin));
   app.setGlobalPrefix('api');
   app.enableShutdownHooks();
 

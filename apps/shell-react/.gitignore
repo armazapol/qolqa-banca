@@ -6,3 +6,7 @@ public/build
 
 # código generado (Orval, GraphQL Codegen)
 app/generated
+
+# Vercel CLI (enlace local del proyecto y build)
+.vercel
+.env.local

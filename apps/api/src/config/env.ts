@@ -15,6 +15,11 @@ export const envSchema = z.object({
   PORT: z.coerce.number().int().default(3000),
   DATABASE_URL: z.url(),
   WEB_ORIGIN: z.url(),
+  // Previews de Vercel (p. ej. https://qolqa-banca-*-equipo.vercel.app). Vacío = solo WEB_ORIGIN.
+  WEB_ORIGIN_PREVIEW: z.preprocess(
+    (value) => (value === '' ? undefined : value),
+    z.string().startsWith('https://').optional(),
+  ),
   TRUST_PROXY: z.coerce.number().int().min(0).default(1),
   LOG_LEVEL: z
     .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace'])

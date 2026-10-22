@@ -1,6 +1,18 @@
 {
   "openapi": "3.0.0",
   "paths": {
+    "/api/health/live": {
+      "get": {
+        "operationId": "healthLive",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["health"]
+      }
+    },
     "/api/health": {
       "get": {
         "operationId": "healthCheck",

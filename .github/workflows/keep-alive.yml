@@ -1,0 +1,22 @@
+# Mantiene despierto el BFF del plan gratuito de Render, que se duerme tras
+# 15 minutos sin tráfico (ADR-0023). Usa /api/health/live, que no toca la base
+# de datos: Neon puede suspenderse y no consume sus horas gratuitas.
+#
+# El cron de GitHub no es puntual (puede retrasarse minutos): algún arranque en
+# frío seguirá ocurriendo, y para eso está el aviso "Despertando el servidor…".
+name: Keep-alive del BFF
+
+on:
+  schedule:
+    - cron: '*/14 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    if: vars.API_ORIGIN != ''
+    steps:
+      - run: curl --fail --silent --show-error --retry 3 --retry-delay 20 --retry-all-errors --max-time 90 "${{ vars.API_ORIGIN }}/api/health/live"

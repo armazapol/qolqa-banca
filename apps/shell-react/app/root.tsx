@@ -20,6 +20,7 @@ import {
 import { AnalyticsTracker } from './components/AnalyticsTracker';
 import { ConsentBanner } from './components/ConsentBanner';
 import { NoticeCenter } from './components/NoticeCenter';
+import { ServerWakeNotice } from './components/ServerWakeNotice';
 import { PwaUpdatePrompt } from './components/PwaUpdatePrompt';
 import { StatusPage } from './components/StatusPage';
 import { useNonce } from './lib/csp/nonce';
@@ -92,6 +93,7 @@ export default function App() {
           <MotionConfig reducedMotion="user">
             <Outlet />
             <NoticeCenter />
+            <ServerWakeNotice />
             <ConsentBanner />
             <AnalyticsTracker />
             <PwaUpdatePrompt />
