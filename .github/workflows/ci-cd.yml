@@ -78,6 +78,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - run: npm install --global ${{ env.VERCEL_CLI }}
+      # TEMPORAL: diagnóstico del acceso del token (solo usuario y equipos).
+      - name: Diagnóstico Vercel
+        run: |
+          vercel whoami --token=${{ secrets.VERCEL_TOKEN }} || true
+          vercel teams ls --token=${{ secrets.VERCEL_TOKEN }} || true
+          vercel project ls --scope=${{ vars.VERCEL_ORG_ID }} --token=${{ secrets.VERCEL_TOKEN }} || true
       - name: Remote Angular (preview)
         id: remote
         env:
