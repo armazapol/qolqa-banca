@@ -125,7 +125,7 @@ jobs:
         run: |
           node -e "
             const config = require('./lighthouserc.json');
-            config.ci.collect.settings = { extraHeaders: { 'x-vercel-protection-bypass': process.env.BYPASS } };
+            config.ci.collect.settings = { ...config.ci.collect.settings, extraHeaders: { 'x-vercel-protection-bypass': process.env.BYPASS } };
             require('fs').writeFileSync(process.env.RUNNER_TEMP + '/lhci-preview.json', JSON.stringify(config));
           "
       - name: Lighthouse (presupuestos)

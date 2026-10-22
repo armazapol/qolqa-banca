@@ -42,9 +42,11 @@ export default function Home() {
   return (
     <>
       <section className="mx-auto grid max-w-6xl gap-10 px-4 py-16 md:grid-cols-2 md:py-24">
+        {/* Sin fundido de opacidad: el titular es el LCP y debe verse desde el HTML
+            prerenderizado, no tras hidratar (ADR-0023). Un transform no afecta al LCP. */}
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ y: 12 }}
+          animate={{ y: 0 }}
           transition={{ duration: 0.4 }}
           className="flex flex-col justify-center gap-6"
         >
