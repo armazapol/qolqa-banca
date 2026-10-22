@@ -16,7 +16,9 @@ import { join } from 'node:path';
 import { SECURITY_HEADERS } from '../app/lib/csp/policy';
 
 const ROOT = join(import.meta.dirname, '..');
-const CONFIG = join(ROOT, '.vercel/output/config.json');
+// Monorepo: el proyecto de Vercel tiene Root Directory = apps/shell-react y
+// `vercel build` se ejecuta desde la raíz del repo, donde deja .vercel/output.
+const CONFIG = join(ROOT, '../../.vercel/output/config.json');
 const CSP_STATIC = join(ROOT, 'build/csp-static.json');
 
 interface Route {

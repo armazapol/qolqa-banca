@@ -78,12 +78,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - run: npm install --global ${{ env.VERCEL_CLI }}
-      # TEMPORAL: diagnóstico del acceso del token (solo usuario y equipos).
-      - name: Diagnóstico Vercel
-        run: |
-          vercel whoami --token=${{ secrets.VERCEL_TOKEN }} || true
-          vercel teams ls --token=${{ secrets.VERCEL_TOKEN }} || true
-          vercel project ls --scope=${{ vars.VERCEL_ORG_ID }} --token=${{ secrets.VERCEL_TOKEN }} || true
       - name: Remote Angular (preview)
         id: remote
         env:
@@ -94,9 +88,10 @@ jobs:
           node apps/mf-investments/scripts/vercel-output.mjs
           url=$(cd apps/mf-investments && vercel deploy --prebuilt --yes --token=${{ secrets.VERCEL_TOKEN }})
           echo "url=$url" >> "$GITHUB_OUTPUT"
+      # Desde la raíz: el proyecto tiene Root Directory = apps/shell-react y la
+      # función SSR referencia archivos del monorepo con rutas desde la raíz.
       - name: Shell React (preview)
         id: shell
-        working-directory: apps/shell-react
         env:
           VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID_SHELL }}
@@ -114,7 +109,7 @@ jobs:
         run: |
           vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
           vercel build --token=${{ secrets.VERCEL_TOKEN }}
-          pnpm exec tsx scripts/vercel-output.ts
+          (cd apps/shell-react && pnpm exec tsx scripts/vercel-output.ts)
           url=$(vercel deploy --prebuilt --yes --token=${{ secrets.VERCEL_TOKEN }})
           echo "url=$url" >> "$GITHUB_OUTPUT"
           {
@@ -185,7 +180,6 @@ jobs:
           cd apps/mf-investments && vercel deploy --prebuilt --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Shell React
-        working-directory: apps/shell-react
         env:
           VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID_SHELL }}
@@ -202,7 +196,7 @@ jobs:
         run: |
           vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
           vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-          pnpm exec tsx scripts/vercel-output.ts
+          (cd apps/shell-react && pnpm exec tsx scripts/vercel-output.ts)
           vercel deploy --prebuilt --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Lighthouse (informe público temporal)
