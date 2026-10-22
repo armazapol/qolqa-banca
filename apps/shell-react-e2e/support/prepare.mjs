@@ -54,6 +54,8 @@ const dbEnv = {
   TOTP_ENCRYPTION_KEY: API_ENV.TOTP_ENCRYPTION_KEY,
 };
 run('pnpm exec prisma migrate deploy', dbEnv, `${ROOT}/apps/api`);
+// El seed importa el cliente generado, que no existe en un checkout limpio (CI).
+run('pnpm nx run api:prisma-generate --outputStyle=static');
 run(
   'pnpm exec tsx prisma/seed.ts',
   {
