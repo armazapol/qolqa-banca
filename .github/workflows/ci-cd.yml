@@ -101,7 +101,7 @@ jobs:
           VITE_WS_URL: ${{ vars.API_ORIGIN }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ vars.SENTRY_ORG }}
-          SENTRY_PROJECT: qolqa-shell
+          SENTRY_PROJECT: qolqa-banca-shell
           SENTRY_RELEASE: ${{ github.sha }}
           API_ORIGIN: ${{ vars.API_ORIGIN }}
           # El preview del shell usa el remote de este mismo PR.
@@ -189,7 +189,7 @@ jobs:
           VITE_WS_URL: ${{ vars.API_ORIGIN }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ vars.SENTRY_ORG }}
-          SENTRY_PROJECT: qolqa-shell
+          SENTRY_PROJECT: qolqa-banca-shell
           SENTRY_RELEASE: ${{ github.sha }}
           API_ORIGIN: ${{ vars.API_ORIGIN }}
           INVESTMENTS_ORIGIN: ${{ vars.INVESTMENTS_URL }}
