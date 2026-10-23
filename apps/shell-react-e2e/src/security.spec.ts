@@ -15,7 +15,7 @@ test.describe('Seguridad de la sesión', () => {
   }) => {
     await page.goto('/ingresar');
     await page.getByLabel('Correo electrónico').fill(bankUser.email);
-    await page.getByLabel('Contraseña').fill('Incorrecta123');
+    await page.getByLabel('Contraseña', { exact: true }).fill('Incorrecta123');
     await page.getByRole('button', { name: 'Continuar' }).click();
     await expect(page.getByRole('alert')).toContainText(
       'Credenciales inválidas',
@@ -62,7 +62,7 @@ test.describe('Seguridad de la sesión', () => {
   }) => {
     await page.goto('/ingresar');
     await page.getByLabel('Correo electrónico').fill(bankUser.email);
-    await page.getByLabel('Contraseña').fill(password);
+    await page.getByLabel('Contraseña', { exact: true }).fill(password);
     await page.getByRole('button', { name: 'Continuar' }).click();
     const code = await generate({ secret: bankUser.totpSecret });
     await page.getByLabel('Código de verificación').fill(code);

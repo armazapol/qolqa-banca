@@ -131,7 +131,7 @@ test.describe('Banca', () => {
     const receiverPage = await receiverContext.newPage();
     await receiverPage.goto('/ingresar');
     await receiverPage.getByLabel('Correo electrónico').fill(receiver.email);
-    await receiverPage.getByLabel('Contraseña').fill(password);
+    await receiverPage.getByLabel('Contraseña', { exact: true }).fill(password);
     await receiverPage.getByRole('button', { name: 'Continuar' }).click();
     await receiverPage
       .getByLabel('Código de verificación')

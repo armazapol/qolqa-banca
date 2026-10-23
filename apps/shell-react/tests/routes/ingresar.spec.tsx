@@ -99,6 +99,23 @@ describe('Ingresar', () => {
     );
   });
 
+  it('permite mostrar y volver a ocultar la contraseña', async () => {
+    const user = userEvent.setup();
+    renderLogin();
+    const password = await screen.findByLabelText('Contraseña');
+    expect(password).toHaveAttribute('type', 'password');
+
+    await user.click(
+      screen.getByRole('button', { name: 'Mostrar contraseña' }),
+    );
+    expect(password).toHaveAttribute('type', 'text');
+
+    await user.click(
+      screen.getByRole('button', { name: 'Ocultar contraseña' }),
+    );
+    expect(password).toHaveAttribute('type', 'password');
+  });
+
   it('explica por qué se cerró la sesión', async () => {
     renderRoute(Ingresar, {
       path: '/ingresar',
