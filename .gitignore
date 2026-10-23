@@ -57,3 +57,6 @@ test-output
 
 vite.config.*.timestamp*
 .angular
+
+# Vercel CLI (enlace local y salida de `vercel build`)
+.vercel

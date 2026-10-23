@@ -1,0 +1,7 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "react-router",
+  "installCommand": "echo 'Dependencias instaladas por el workflow de GitHub Actions'",
+  "buildCommand": "pnpm --workspace-root exec nx run shell-react:build --skip-nx-cache --outputStyle=static",
+  "regions": ["iad1"]
+}

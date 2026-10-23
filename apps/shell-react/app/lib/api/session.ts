@@ -5,6 +5,7 @@ import {
   csrfTokenResponseSchema,
 } from '@qolqa/contracts';
 import { toApiError } from './errors';
+import { trackSlowRequest } from './server-wake';
 import { tokenStore } from './token-store';
 
 const REFRESH_LOCK = 'qolqa-session-refresh';
@@ -16,9 +17,9 @@ let inFlight: Promise<AccessTokenResponse | null> | null = null;
 /** Token CSRF en memoria; la cookie la fija el BFF (double-submit firmado). */
 async function getCsrfToken(force = false): Promise<string> {
   if (csrfToken && !force) return csrfToken;
-  const response = await fetch('/api/auth/csrf', {
-    credentials: 'same-origin',
-  });
+  const response = await trackSlowRequest(
+    fetch('/api/auth/csrf', { credentials: 'same-origin' }),
+  );
   if (!response.ok) throw await toApiError(response);
   csrfToken = csrfTokenResponseSchema.parse(await response.json()).csrfToken;
   return csrfToken;
@@ -26,11 +27,13 @@ async function getCsrfToken(force = false): Promise<string> {
 
 async function postWithCsrf(path: string): Promise<Response> {
   const send = async (force: boolean) =>
-    fetch(path, {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: { [CSRF_HEADER]: await getCsrfToken(force) },
-    });
+    trackSlowRequest(
+      fetch(path, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { [CSRF_HEADER]: await getCsrfToken(force) },
+      }),
+    );
   const response = await send(false);
   // Si la cookie CSRF expiró o se borró, se pide un token nuevo una sola vez.
   return response.status === 403 ? send(true) : response;

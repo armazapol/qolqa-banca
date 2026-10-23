@@ -1,0 +1,32 @@
+# Restablece los datos de demostración cada día a las 05:00 de Lima (ADR-0023):
+# saldos, movimientos y usuarios vuelven al estado del seed, sin importar lo que
+# hicieran los visitantes. También invalida las sesiones abiertas.
+name: Reseteo diario de la demo
+
+on:
+  schedule:
+    - cron: '0 10 * * *' # 10:00 UTC = 05:00 en Lima (UTC-5, sin horario de verano)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production # nunca a la vez que una migración
+  cancel-in-progress: false
+
+jobs:
+  reset:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm nx run api:prisma-generate --outputStyle=static
+      - name: Seed de demostración en Neon
+        working-directory: apps/api
+        env:
+          DATABASE_URL: ${{ secrets.NEON_DIRECT_URL }}
+          # La misma clave que usa el BFF: los secretos TOTP se cifran con ella.
+          TOTP_ENCRYPTION_KEY: ${{ secrets.TOTP_ENCRYPTION_KEY }}
+        run: pnpm exec tsx prisma/seed.ts

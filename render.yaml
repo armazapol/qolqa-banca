@@ -1,0 +1,62 @@
+# BFF NestJS en Render (ADR-0023). Se crea una vez desde el dashboard:
+# New → Blueprint → este repositorio.
+#
+# - Sin auto-deploy: GitHub Actions despliega por API el commit exacto que pasó
+#   la CI, después de aplicar las migraciones en Neon.
+# - Los secretos de firma y cifrado los genera Render (nunca pasan por el repo).
+# - Las variables con `sync: false` se rellenan en el dashboard al crear el servicio.
+services:
+  - type: web
+    name: qolqa-api
+    runtime: node
+    plan: free
+    region: virginia # junto a Neon (aws-us-east-1) y a las funciones de Vercel (iad1)
+    branch: main
+    autoDeployTrigger: 'off'
+    buildCommand: >-
+      corepack enable &&
+      pnpm install --frozen-lockfile --prod=false &&
+      pnpm nx run api:build --outputStyle=static
+    startCommand: node --enable-source-maps apps/api/dist/main.js
+    # Sin base de datos: el health check periódico no debe impedir que Neon se suspenda.
+    healthCheckPath: /api/health/live
+    envVars:
+      - key: NODE_VERSION
+        value: '24'
+      - key: NODE_ENV
+        value: production
+      - key: NX_DAEMON
+        value: 'false'
+      - key: NX_NO_CLOUD
+        value: 'true'
+      - key: LOG_LEVEL
+        value: info
+      # Cadena *pooled* de Neon (la directa solo la usa Actions para migrar).
+      - key: DATABASE_URL
+        sync: false
+      - key: WEB_ORIGIN
+        value: https://qolqa-banca.vercel.app
+      - key: WEB_ORIGIN_PREVIEW
+        value: https://qolqa-banca-*-polarmaza002s-projects.vercel.app
+      # Cliente → Vercel (rewrite /api) → proxy de Render → BFF.
+      - key: TRUST_PROXY
+        value: '2'
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_MFA_SECRET
+        generateValue: true
+      - key: CSRF_SECRET
+        generateValue: true
+      # Copiarla también como secreto de GitHub: la usa el reseteo diario de la demo.
+      - key: TOTP_ENCRYPTION_KEY
+        generateValue: true
+      - key: SENTRY_DSN
+        sync: false
+      - key: SENTRY_ENVIRONMENT
+        value: production
+      - key: SENTRY_AUTH_TOKEN
+        sync: false
+      - key: SENTRY_ORG
+        sync: false
+      - key: SENTRY_PROJECT
+        value: qolqa-banca-api

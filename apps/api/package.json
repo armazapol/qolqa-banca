@@ -186,6 +186,7 @@
   },
   "devDependencies": {
     "@nestjs/testing": "^11.0.0",
+    "@sentry/webpack-plugin": "^11.8.0",
     "@types/cookie-parser": "^1.4.10",
     "@types/express": "^5.0.6",
     "pino-pretty": "^13.2.0",

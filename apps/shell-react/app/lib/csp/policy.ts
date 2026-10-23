@@ -21,6 +21,13 @@ export interface CspOptions {
   blobModules?: boolean;
 }
 
+/** Cabeceras que acompañan a la CSP en todo documento HTML (SSR y prerenderizado). */
+export const SECURITY_HEADERS: Readonly<Record<string, string>> = {
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()',
+};
+
 const GA_SCRIPT = ['https://www.googletagmanager.com'];
 const GA_CONNECT = [
   'https://*.google-analytics.com',

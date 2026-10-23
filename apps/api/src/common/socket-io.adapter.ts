@@ -9,7 +9,7 @@ import type { ServerOptions } from 'socket.io';
 export class SocketIoAdapter extends IoAdapter {
   constructor(
     app: INestApplicationContext,
-    private readonly allowedOrigin: string,
+    private readonly isAllowedOrigin: (origin: string | undefined) => boolean,
   ) {
     super(app);
   }
@@ -17,7 +17,13 @@ export class SocketIoAdapter extends IoAdapter {
   override createIOServer(port: number, options?: ServerOptions): unknown {
     return super.createIOServer(port, {
       ...options,
-      cors: { origin: this.allowedOrigin, credentials: false },
+      cors: {
+        origin: (
+          origin: string | undefined,
+          callback: (error: Error | null, allow?: boolean) => void,
+        ) => callback(null, this.isAllowedOrigin(origin)),
+        credentials: false,
+      },
       // Solo WebSocket: evita el long-polling, que necesitaría sesiones pegajosas.
       transports: ['websocket'],
       maxHttpBufferSize: 16 * 1024,

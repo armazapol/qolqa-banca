@@ -12,6 +12,7 @@ import {
   cspFromEnv,
   isHttpsRequest,
   isPrivateAreaPath,
+  SECURITY_HEADERS,
 } from './lib/csp/policy';
 import { NonceProvider } from './lib/csp/nonce';
 import { sentryDataCollection, scrubEvent } from './lib/monitoring/scrub';
@@ -67,12 +68,9 @@ export default function handleRequest(
         privateArea: isPrivateAreaPath(new URL(request.url).pathname),
       }),
     );
-    responseHeaders.set('X-Content-Type-Options', 'nosniff');
-    responseHeaders.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-    responseHeaders.set(
-      'Permissions-Policy',
-      'camera=(), microphone=(), geolocation=(), payment=()',
-    );
+    for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
+      responseHeaders.set(name, value);
+    }
   }
 
   return sentryHandleRequest(

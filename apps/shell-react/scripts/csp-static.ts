@@ -2,7 +2,7 @@
  * CSP de las páginas prerenderizadas (ADR-0021).
  * Sin servidor no hay nonce: se calcula el SHA-256 de cada script inline del
  * HTML generado y se escribe build/csp-static.json { "/ruta": "política" }.
- * En el despliegue (Fase 6) esas políticas se envían como cabecera por ruta.
+ * En Vercel, scripts/vercel-output.ts las envía como cabecera por ruta (ADR-0023).
  *
  * Uso: tsx scripts/csp-static.ts (después de `react-router build`).
  */

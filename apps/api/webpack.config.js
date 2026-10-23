@@ -1,4 +1,5 @@
 const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+const { sentryWebpackPlugin } = require('@sentry/webpack-plugin');
 const { isAbsolute, join } = require('path');
 
 /**
@@ -14,6 +15,20 @@ function externalizeNodeModules({ request }, callback) {
     !request.startsWith('@qolqa/');
   return isPackage ? callback(null, `commonjs ${request}`) : callback();
 }
+
+/**
+ * Source maps a Sentry solo en el build de Render (ADR-0023), que aporta
+ * SENTRY_AUTH_TOKEN, SENTRY_ORG y SENTRY_PROJECT. La release es el commit
+ * desplegado (RENDER_GIT_COMMIT): el plugin la inyecta y Sentry.init la usa.
+ */
+const sentryPlugins = process.env.SENTRY_AUTH_TOKEN
+  ? [
+      sentryWebpackPlugin({
+        release: { name: process.env.RENDER_GIT_COMMIT },
+        telemetry: false,
+      }),
+    ]
+  : [];
 
 module.exports = {
   output: {
@@ -39,5 +54,6 @@ module.exports = {
       // no inspecciona: se combinan sus externals con externalizeNodeModules.
       mergeExternals: true,
     }),
+    ...sentryPlugins,
   ],
 };

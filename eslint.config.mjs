@@ -12,6 +12,7 @@ export default [
       '**/test-output',
       '**/.nx',
       '**/build',
+      '**/.vercel',
       '**/.react-router',
       '**/vite.config.*.timestamp*',
     ],

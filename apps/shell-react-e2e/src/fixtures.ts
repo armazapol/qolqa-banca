@@ -146,7 +146,7 @@ export const test = base.extend<Fixtures>({
     await use(async (user) => {
       await page.goto('/ingresar');
       await page.getByLabel('Correo electrónico').fill(user.email);
-      await page.getByLabel('Contraseña').fill(password);
+      await page.getByLabel('Contraseña', { exact: true }).fill(password);
       await page.getByRole('button', { name: 'Continuar' }).click();
       await page.getByLabel('Código de verificación').fill(await totp(user));
       await page.getByRole('button', { name: 'Verificar e ingresar' }).click();

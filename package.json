@@ -8,6 +8,10 @@
     "format:check": "nx format:check"
   },
   "private": true,
+  "packageManager": "pnpm@11.9.0",
+  "engines": {
+    "node": ">=24 <25"
+  },
   "devDependencies": {
     "@angular-devkit/core": "~22.2.3",
     "@angular-devkit/schematics": "~22.2.3",

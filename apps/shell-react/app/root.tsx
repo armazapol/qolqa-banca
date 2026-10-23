@@ -20,6 +20,7 @@ import {
 import { AnalyticsTracker } from './components/AnalyticsTracker';
 import { ConsentBanner } from './components/ConsentBanner';
 import { NoticeCenter } from './components/NoticeCenter';
+import { ServerWakeNotice } from './components/ServerWakeNotice';
 import { PwaUpdatePrompt } from './components/PwaUpdatePrompt';
 import { StatusPage } from './components/StatusPage';
 import { useNonce } from './lib/csp/nonce';
@@ -61,6 +62,12 @@ export function Layout({ children }: { children: ReactNode }) {
     <html lang="es-PE" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
+        {/* El orden de las capas lo fija su primera aparición. MUI inserta los
+            GlobalStyles montados en el cliente antes de su insertion point; si no
+            existe, lo crea al principio del <head> y @layer mui quedaría como la
+            capa más baja, por debajo del reset de Tailwind. */}
+        <style>{'@layer theme, base, mui, components, utilities;'}</style>
+        <meta name="emotion-insertion-point" content="" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#0B4F5C" />
         <Meta />
@@ -92,6 +99,7 @@ export default function App() {
           <MotionConfig reducedMotion="user">
             <Outlet />
             <NoticeCenter />
+            <ServerWakeNotice />
             <ConsentBanner />
             <AnalyticsTracker />
             <PwaUpdatePrompt />

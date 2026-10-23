@@ -1,8 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import VisibilityOffOutlined from '@mui/icons-material/VisibilityOffOutlined';
+import VisibilityOutlined from '@mui/icons-material/VisibilityOutlined';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
+import IconButton from '@mui/material/IconButton';
+import InputAdornment from '@mui/material/InputAdornment';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import {
@@ -52,6 +56,7 @@ function PasswordStep({
     defaultValues: { email: '', password: '' },
   });
   const { errors } = form.formState;
+  const [showPassword, setShowPassword] = useState(false);
 
   const submit = form.handleSubmit(async (data) => {
     const result = await login.mutateAsync({ data }).catch(() => null);
@@ -76,11 +81,35 @@ function PasswordStep({
       />
       <TextField
         label="Contraseña"
-        type="password"
+        type={showPassword ? 'text' : 'password'}
         autoComplete="current-password"
         {...form.register('password')}
         error={Boolean(errors.password)}
         helperText={errors.password?.message}
+        slotProps={{
+          input: {
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  aria-label={
+                    showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'
+                  }
+                  aria-pressed={showPassword}
+                  onClick={() => setShowPassword((shown) => !shown)}
+                  // Mantiene el foco en el campo al pulsar el botón.
+                  onMouseDown={(event) => event.preventDefault()}
+                  edge="end"
+                >
+                  {showPassword ? (
+                    <VisibilityOffOutlined />
+                  ) : (
+                    <VisibilityOutlined />
+                  )}
+                </IconButton>
+              </InputAdornment>
+            ),
+          },
+        }}
       />
       <Button
         type="submit"
